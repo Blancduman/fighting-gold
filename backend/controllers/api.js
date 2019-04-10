@@ -6,6 +6,21 @@ const User = require('./models/user'),
       Dialog = require('./models/dialog'),
       config = require('./config');
 
+const errorMessages = {
+  ServerError: 'Произошла ошибка на сервере.',
+  UserExist: 'Пользователь с таким username/email уже существует.',
+  ServerName: 'Сервер с таким именем уже существует.',
+  Forbidden: 'У вас недостаточно прав.',
+  AccessDenied: 'Доступ запрещен. Войдите в систему.',
+  ServerNotFound: 'Сервер не найден.',
+  UsernameEmailExist: 'Такой username/email уже занят.',
+  UserUnfound: 'Пользователь не найдет.',
+  DialogSaveError: 'Ошибка при сохранении диалога.',
+  DialogCreateError: 'Ошибка при создании диалога.',
+  DialogUnfound: 'Диалог не найден.',
+  InvalidIds: 'Неверный id пользователя и/или сервера.'
+}
+
 module.exports.auth = async function(req, res) {
   try {
     const user = await User.findOne({email: req.body.email}).select('username email image');
@@ -48,15 +63,15 @@ module.exports.register = async function(req, res) {
         return res.json({ success: true });
       } catch (error) {
         console.log('/api/register/ third try', error);
-        return res.json({success: false, message: 'Произошла ошибка на сервере.'});
+        return res.json({success: false, message: errorMessages.ServerError});
       }
     } catch (error) {
       console.log('/api/register/ second try', error);
-      return res.json({success: false, message: 'Произошла ошибка на сервере.'});
+      return res.json({success: false, message: errorMessages.ServerError});
     }
   } catch (error) {
     console.log('/api/register first try', error);
-    return res.json({success: false, message: 'Пользователь с таким username/email уже существует.', logout: true});
+    return res.json({success: false, message: errorMessages.UserExist, logout: true});
   }
 };
 
@@ -104,35 +119,35 @@ module.exports.create_server = async function(req, res) {
             } catch (error) {
               console.log('/api/create_server 5rd try', error);
               //return res.json({ success: false, message: 'Не удалось найти пользователя.'})
-              return res.json({ success: false, message: 'Произошла ошибка на сервере.'})
+              return res.json({ success: false, message: errorMessages.ServerError})
             }
           } catch (error) {
             console.log('/api/create_server 4rd try', error);
             //return res.json({ success: false, message: 'Не удалось найти сервер.'})
-            return res.json({ success: false, message: 'Произошла ошибка на сервере.'})
+            return res.json({ success: false, message: errorMessages.ServerError})
           }
           
         } catch (error) {
           console.log('/api/create_server third try', error);
           await createdRoom.remove();
-          return res.json({ success: false, message: 'Сервер с таким именем уже существует.'})
+          return res.json({ success: false, message: errorMessages.ServerName})
         }
       } catch (error) {
         console.log('/api/create_server second try', error);
         //return res.json({ success: false, message: 'Не удалось создать комнату.'})
-        return res.json({ success: false, message: 'Произошла ошибка на сервере.'})
+        return res.json({ success: false, message: errorMessages.ServerError})
       }
     } else {
       if (user && !user.isAdmin) {
-        return res.json({success: false, message: "У вас недостаточно прав."});
+        return res.json({success: false, message: errorMessages.Forbidden});
       } else {
-        return res.json({success: false, message: 'Доступ запрещен. Войдите в систему.', logout: true});
+        return res.json({success: false, message: errorMessages.AccessDenied, logout: true});
       }
     }
   } catch (error) {
     console.log('/api/create_server first try', error);
     //return res.json({success: false, message: 'Не удалось создать новый сервер.'});
-    return res.json({success: false, message: 'Доступ запрещен. Войдите в систему.', logout: true});
+    return res.json({success: false, message: errorMessages.AccessDenied, logout: true});
   }
 };
 
@@ -168,26 +183,26 @@ module.exports.remove_server = async function(req, res) {
             return res.json({success: true});
           } catch (error) {
             console.log('/api/remove_server 4 try', error);
-            return res.json({success: false, message: 'Произошла ошибка на сервере.'});
+            return res.json({success: false, message: errorMessages.ServerError});
           }
         } catch (error) {
           console.log('/api/remove_server 3 try', error);
-          return res.json({success: false, message: 'Произошла ошибка на сервере.'});
+          return res.json({success: false, message: errorMessages.ServerError});
         }
       } catch (error) {
         console.log('/api/remove_server 2 try', error);
-        return res.json({success: false, message: "Сервер не найден."})
+        return res.json({success: false, message: errorMessages.ServerNotFound})
       }
     } else {
       if (user && !user.isAdmin) {
-        return res.json({success: false, message: "У вас недостаточно прав."});
+        return res.json({success: false, message: errorMessages.Forbidden});
       } else {
-        return res.json({success: false, message: 'Доступ запрещен. Войдите в систему.', logout: true});
+        return res.json({success: false, message: errorMessages.AccessDenied, logout: true});
       }
     }
   } catch (error) {
     console.log('/api/remove_server 1 try', error);
-    return res.json({success: false, message: 'Доступ запрещен. Войдите в систему.', logout: true})
+    return res.json({success: false, message: errorMessages.AccessDenied, logout: true})
   }
 };
 
@@ -212,22 +227,22 @@ module.exports.remove_room = async function(req, res) {
           return res.json({success: true});
         } catch (error) {
           console.log('/api/remove_room 3', error);
-          return res.json({success: false, message: 'Произошла ошибка на сервере.'});
+          return res.json({success: false, message: errorMessages.ServerError});
         }
       } catch (error) {
         console.log('/api/remove_room 2', error);
-        return res.json({success: false, message: 'Произошла ошибка на сервере.'});
+        return res.json({success: false, message: errorMessages.ServerError});
       }
     } else {
       if (user && !user.isAdmin) {
         return res.json({success: false, message: "У вас недостаточно прав."});
       } else {
-        return res.json({success: false, message: 'Доступ запрещен. Войдите в систему.', logout: true});
+        return res.json({success: false, message: errorMessages.AccessDenied, logout: true});
       }
     }
   } catch (error) {
     console.log('/api/remove_room 1 try', error);
-    return res.json({success: false, message: 'Доступ запрещен. Войдите в систему.', logout: true});
+    return res.json({success: false, message: errorMessages.AccessDenied, logout: true});
   }
 }
 
@@ -252,22 +267,22 @@ module.exports.edit_server = async function(req, res) {
           return res.json({success: true});
         } catch (error) {
           console.log('/api/edit_server 3', error);
-          return res.json({success: false, message: 'Произошла ошибка на сервере.'})
+          return res.json({success: false, message: errorMessages.ServerError})
         }
       } catch (error) {
         console.log('/api/edit_server 2', error);
-        return res.json({success: false, message: 'Произошла ошибка на сервере.'})
+        return res.json({success: false, message: errorMessages.ServerError})
       }
     } else {
       if (user && !user.isAdmin) {
         return res.json({success: false, message: "У вас недостаточно прав."});
       } else {
-        return res.json({success: false, message: 'Доступ запрещен. Войдите в систему.', logout: true});
+        return res.json({success: false, message: errorMessages.AccessDenied, logout: true});
       }
     }
   } catch (error) {
     console.log('/api/edit_server 1', error);
-    return res.json({success: false, message: 'Доступ запрещен. Войдите в систему.', logout: true})
+    return res.json({success: false, message: errorMessages.AccessDenied, logout: true})
   }
 };
 
@@ -314,12 +329,12 @@ module.exports.edit_user = async function(req, res) {
 
       } catch (error) {
         console.log('/api/user/edit_user try', error);
-        return res.json({success: false, message: 'Такой username/email уже занят.'});
+        return res.json({success: false, message: errorMessages.UsernameEmailExist});
       }
-    } else return res.json({success: false, message: 'Доступ запрещен. Войдите в систему.', logout: true});
+    } else return res.json({success: false, message: errorMessages.AccessDenied, logout: true});
   } catch (error) {
     console.log('/api/user/edit_user try', error);
-    return res.json({success: false, message: 'Доступ запрещен. Войдите в систему.', logout: true});
+    return res.json({success: false, message: errorMessages.AccessDenied, logout: true});
   }
 };
 
@@ -344,22 +359,22 @@ module.exports.create_room = async function(req, res) {
           return res.json({success: true});
         } catch (error) {
           console.log('/api/create_room 3 try', error);
-          return res.json({ success: false, message: 'Произошла ошибка на сервере.'});
+          return res.json({ success: false, message: errorMessages.ServerError});
         }
       } catch (error) {
         console.log('/api/create_room 2 try', error);
-        return res.json({ success: false, message: 'Произошла ошибка на сервере.'});
+        return res.json({ success: false, message: errorMessages.ServerError});
       }
     } else {
       if (user && !user.isAdmin) {
         return res.json({success: false, message: "У вас недостаточно прав."});
       } else {
-        return res.json({success: false, message: 'Доступ запрещен. Войдите в систему.', logout: true});
+        return res.json({success: false, message: errorMessages.AccessDenied, logout: true});
       }
     }
   } catch (error) {
     console.log('/api/create_room 1 try', error);
-    return res.json({success: false, message: 'Доступ запрещен. Войдите в систему.', logout: true})
+    return res.json({success: false, message: errorMessages.AccessDenied, logout: true})
   }
 };
 
@@ -394,14 +409,14 @@ module.exports.cansel_request = async function(req, res) {
       }
     } else {
       if (user) {
-        return res.json({success: false, message: 'Пользователь не найдет.'});
+        return res.json({success: false, message: errorMessages.UserUnfound});
       } else {
-        return res.json({success: false, message: 'Доступ запрещен. Войдите в систему.', logout: true});
+        return res.json({success: false, message: errorMessages.AccessDenied, logout: true});
       }
     }
   } catch (error) {
     console.log('/api/user/cansel_request 1 try', error);
-    return res.json({success: false, message: 'Доступ запрещен. Войдите в систему.', logout: true});
+    return res.json({success: false, message: errorMessages.AccessDenied, logout: true});
   }
 };
 
@@ -443,22 +458,22 @@ module.exports.accept_request = async function(req, res) {
           io.to(`User-${updatedNewFriend.id}`).emit('User_RequestAccepted', { user: { _id: updatedUser.id, username: updatedUser.username, status: updatedUser.status, image: updatedUser.image }, dialog: createdDialog });
         } catch (error) {
           console.log('/api/user/accept_request', error);
-          return res.json({success: false, message: 'Ошибка при сохранении диалога.'});
+          return res.json({success: false, message: errorMessages.DialogSaveError});
         }
       } catch (error) {
         console.log('/api/user/accept_request', error);
-        return res.json({success: false, message: 'Ошибка при создании диалога.'});
+        return res.json({success: false, message: errorMessages.DialogCreateError});
       }
     } else {
       if (user) {
-        return res.json({success: false, message: 'Пользователь не найдет.'});
+        return res.json({success: false, message: errorMessages.UserUnfound});
       } else {
-        return res.json({success: false, message: 'Доступ запрещен. Войдите в систему.', logout: true});
+        return res.json({success: false, message: errorMessages.AccessDenied, logout: true});
       }
     }
   } catch (error) {
     console.log('/api/user/cansel_request 1 try', error);
-    return res.json({success: false, message: 'Доступ запрещен. Войдите в систему.', logout: true});
+    return res.json({success: false, message: errorMessages.AccessDenied, logout: true});
   }
 };
 
@@ -485,14 +500,14 @@ module.exports.send_request = async function(req, res) {
       }
     } else {
       if (user) {
-        return res.json({success: false, message: 'Пользователь не найдет.'});
+        return res.json({success: false, message: errorMessages.UserUnfound});
       } else {
-        return res.json({success: false, message: 'Доступ запрещен. Войдите в систему.', logout: true});
+        return res.json({success: false, message: errorMessages.AccessDenied, logout: true});
       }
     }
   } catch (error) {
     console.log('/api/user/send_request 1 try', error);
-    return res.json({success: false, message: 'Доступ запрещен. Войдите в систему.', logout: true});
+    return res.json({success: false, message: errorMessages.AccessDenied, logout: true});
   }
 }
 
@@ -522,25 +537,25 @@ module.exports.remove_friend = async function(req, res) {
             return res.json({success: true});
           } catch (error) {
             console.log('/api/user/remove_friend 3 try', error);
-            return res.json({success: false, message: 'Произошла ошибка на сервере.'})
+            return res.json({success: false, message: errorMessages.ServerError})
           }
         } else {
-          return res.json({success: false, message: 'Диалог не найден.'})
+          return res.json({success: false, message: errorMessages.DialogUnfound})
         }
       } else {
         if (user) {
-          return res.json({success: false, message: 'Пользователь не найдет.'});
+          return res.json({success: false, message: errorMessages.UserUnfound});
         } else {
-          return res.json({success: false, message: 'Доступ запрещен. Войдите в систему.', logout: true});
+          return res.json({success: false, message: errorMessages.AccessDenied, logout: true});
         }
       }
     } catch (error) {
       console.log('/api/user/remove_friend 2 try', error);
-      return res.json({success: false, message: 'Произошла ошибка на сервере.'})
+      return res.json({success: false, message: errorMessages.ServerError})
     }
   } catch (error) {
     console.log('/api/user/remove_friend 1 try', error);
-    return res.json({success: false, message: 'Доступ запрещен. Войдите в систему.', logout: true});
+    return res.json({success: false, message: errorMessages.AccessDenied, logout: true});
   }
 }
 
@@ -594,26 +609,26 @@ module.exports.block_user = async function(req, res) {
           }
         } catch (error) {
           console.log('/api/user/block_user 3 try', error);
-          return res.json({success: false, message: 'Произошла ошибка на сервере.'});
+          return res.json({success: false, message: errorMessages.ServerError});
         }
       } catch (error) {
         console.log('/api/user/block_user 2 try', error);
         if (user) {
-          return res.json({success: false, message: 'Пользователь не найдет.'});
+          return res.json({success: false, message: errorMessages.UserUnfound});
         } else {
-          return res.json({success: false, message: 'Доступ запрещен. Войдите в систему.', logout: true});
+          return res.json({success: false, message: errorMessages.AccessDenied, logout: true});
         }
       }
     } else {
       if (user) {
-        return res.json({success: false, message: 'Пользователь не найдет.'});
+        return res.json({success: false, message: errorMessages.UserUnfound});
       } else {
-        return res.json({success: false, message: 'Доступ запрещен. Войдите в систему.', logout: true});
+        return res.json({success: false, message: errorMessages.AccessDenied, logout: true});
       }
     }
   } catch (error) {
     console.log('/api/user/block_user 1 try', error);
-    return res.json({success: false, message: 'Доступ запрещен. Войдите в систему.', logout: true});
+    return res.json({success: false, message: errorMessages.AccessDenied, logout: true});
   }
 }
 
@@ -630,21 +645,21 @@ module.exports.unblock_user = async function(req, res) {
             return res.json({success: true});
           } catch (error) {
             console.log('/api/user/unblock_user 2 try', error);
-            return res.json({success: false, message: 'Пользователь не найдет.'});
+            return res.json({success: false, message: errorMessages.UserUnfound});
           }
         } else {
-          return res.json({success: false, message: 'Пользователь не найдет.'});
+          return res.json({success: false, message: errorMessages.UserUnfound});
         }
       } catch (error) {
         console.log('/api/user/unblock_user 2 try', error);
-        return res.json({success: false, message: 'Пользователь не найдет.'});
+        return res.json({success: false, message: errorMessages.UserUnfound});
       }
     } else {
-      return res.json({success: false, message: 'Доступ запрещен. Войдите в систему.', logout: true});
+      return res.json({success: false, message: errorMessages.AccessDenied, logout: true});
     }
   } catch (error) {
     console.log('/api/user/unblock_user 1 try', error);
-    return res.json({success: false, message: 'Доступ запрещен. Войдите в систему.', logout: true});
+    return res.json({success: false, message: errorMessages.AccessDenied, logout: true});
   }
 }
 
@@ -653,7 +668,7 @@ module.exports.unblock_user = async function(req, res) {
 //     const user = await User.findById(jwt.verify(req.body.token, config.JWT_KEY));
 //   } catch (error) {
 //     console.log('/api/user/logout 1 try', error);
-//     return res.json({success: false, message: 'Доступ запрещен. Войдите в систему.', logout: true});
+//     return res.json({success: false, message: errorMessages.AccessDenied, logout: true});
 //   }
 // }
 
@@ -686,25 +701,25 @@ module.exports.ban_user = async function(req, res) {
             return res.json({success: true});
           } catch (error) {
             console.log('/api/ban_user 3 try', error);
-            return res.json({success: false, message: 'Произошла ошибка на сервере.'})
+            return res.json({success: false, message: errorMessages.ServerError})
           }
         } else {
-          return res.json({success: false, message: 'Неверный id пользователя и/или сервера.'})
+          return res.json({success: false, message: errorMessages.InvalidIds})
         }
       } catch (error) {
         console.log('/api/ban_user 2 try', error);
-        return res.json({success: false, message: 'Неверный id пользователя и/или сервера.'})
+        return res.json({success: false, message: errorMessages.InvalidIds})
       }
     } else {
       if (user && !user.isAdmin) {
         return res.json({success: false, message: "У вас недостаточно прав."});
       } else {
-        return res.json({success: false, message: 'Доступ запрещен. Войдите в систему.', logout: true});
+        return res.json({success: false, message: errorMessages.AccessDenied, logout: true});
       }
     }
   } catch (error) {
     console.log('/api/ban_user 1 try', error);
-    return res.json({success: false, message: 'Доступ запрещен. Войдите в систему.', logout: true})
+    return res.json({success: false, message: errorMessages.AccessDenied, logout: true})
   }
 }
 
@@ -751,24 +766,24 @@ module.exports.unban_user = async function(req, res) {
             return res.json({success: true});
           } catch (error) {
             console.log('/api/unban_user 3 try', error);
-            return res.json({success: false, message: 'Произошла ошибка на сервере.'})
+            return res.json({success: false, message: errorMessages.ServerError})
           }
         } else {
-          return res.json({success: false, message: 'Неверный id пользователя и/или сервера.'})
+          return res.json({success: false, message: errorMessages.InvalidIds})
         }
       } catch (error) {
         console.log('/api/unban_user 2 try', error);
-        return res.json({success: false, message: 'Неверный id пользователя и/или сервера.'})
+        return res.json({success: false, message: errorMessages.InvalidIds})
       }
     } else {
       if (user && !user.isAdmin) {
         return res.json({success: false, message: "У вас недостаточно прав."});
       } else {
-        return res.json({success: false, message: 'Доступ запрещен. Войдите в систему.', logout: true});
+        return res.json({success: false, message: errorMessages.AccessDenied, logout: true});
       }
     }
   } catch (error) {
     console.log('/api/unban_user 1 try', error);
-    return res.json({success: false, message: 'Доступ запрещен. Войдите в систему.', logout: true})
+    return res.json({success: false, message: errorMessages.AccessDenied, logout: true})
   }
 }

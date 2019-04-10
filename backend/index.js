@@ -4,7 +4,7 @@ const express = require('express'),
       mongoose = require('mongoose'),
       path = require('path'),
       http = require('http').Server(app)
-      io = require('socket.io')(http),
+      io = module.exports.io = require('socket.io')(http),
       jwt = require('jsonwebtoken'),
       cors = require('cors'),
       socketioJwt = require('socketio-jwt'),
