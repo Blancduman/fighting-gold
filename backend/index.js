@@ -25,6 +25,8 @@ const controllerAuth = require('./controllers/api').auth,
       controllerBlock_user = require('./controllers/api').block_user,
       controllerRemove_friend = require('./controllers/api').remove_friend,
       controllerUnblock_user = require('./controllers/api').unblock_user;
+      controllerUnban_user = require('./controllers/api').unban_user,
+      controllerBan_user = require('./controllers/api').ban_user;
 
 const socketManager = require('./controllers/socketManager');
 
@@ -56,6 +58,8 @@ app.post('/api/server/create_server', controllerCreate_server);
 app.post('/api/server/create_room', controllerCreate_room),
 app.post('/api/server/remove_server', controllerRemove_server);
 app.post('/api/server/remove_room', controllerRemove_room);
+app.post('/api/server/unban_user', controllerUnban_user);
+app.post('/api/server/ban_user', controllerBan_user);
 app.post('/api/server/edit_server', uploadImg.single('picture'), controllerEdit_server);
 
 io.use(socketioJwt.authorize({

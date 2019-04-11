@@ -70,7 +70,7 @@ const mergeSort = (function () {
           rightSize = end - middle,
           maxSize = Math.max(leftSize, rightSize),
           size = end - start,
-          i;
+          i = 0;
 
       for (i = 0; i < maxSize; i += 1) {
           if (i < leftSize) {

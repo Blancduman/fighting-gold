@@ -1,5 +1,5 @@
 import React from 'react';
-import Chat from '../Components';
+import Chat from '../Components/Chat';
 import MessageInput from '../Components/MessageInput';
 import ServerListSidebar from './ServerListSidebar';
 import DialogList from '../Components/DialogList';
@@ -263,11 +263,11 @@ class Home extends React.Component {
     return (
         <div style={{display:'inline-flex', width:'100%'}}>
           <ServerListSidebar/>
-          <DialogsSideBar openUserProfile={this.openUserProfile} user={this.props.user} dialogs={this.props.dialogs} activeDialogId={this.props.activeDialogId} setActiveDialog={this.props.setActiveDialogId} />
+          <DialogList openUserProfile={this.OpenUserProfile} user={this.props.user} dialogs={this.props.dialogs} activeDialogId={this.props.activeDialogId} setActiveDialog={this.props.setActiveDialogId} />
           { activeDialogId !== ''
             ? ChatWindow
             : FriendsWindow }
-          <FSDialogBoxEditProfile saveChanges={this.saveUserProfileChanges} open={this.state.openProfileEditor} user={user} logout={this.logout} closeDialog={this.closeUserProfile}/>
+          <FSDialogBoxEditProfile saveChanges={this.SaveUserProfileChanges} open={this.state.openProfileEditor} user={user} logout={this.Logout} closeDialog={this.CloseUserProfile}/>
         </div>
     )
   }

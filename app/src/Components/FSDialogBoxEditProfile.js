@@ -36,8 +36,6 @@ const styles = {
 function Transition(props) {
   return <Slide direction="up" {...props} />;
 }
-
-const ServerAddress = 'http://localhost:8000';
 class FSDialogBoxEditProfile extends React.Component {
   constructor(props) {
     super(props);

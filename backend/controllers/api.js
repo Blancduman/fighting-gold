@@ -761,9 +761,9 @@ module.exports.unban_user = async function(req, res) {
               if (reciver.isAdmin) {
                 io.to(`User-${reciver.id}`).emit('Admin_UserUnbanned', JSON.stringify({serverId: server.id,  user: {_id: UnbannedUser.id, username: UnbannedUser.username, status: UnbannedUser.status, image: UnbannedUser.image}}));
               } else if (reciver.id === unbannedUser.id) {
-                io.to(`User-${reciver.id}`).emit('NewServerAdd', JSON.stringify({server: server}));
+                io.to(`User-${reciver.id}`).emit('Server_ServerCreated', JSON.stringify({server: server}));
               } else {
-                io.to(`User-${reciver.id}`).emit('UserUnbannedFromServer', {serverId: server.id, user: {_id: UnbannedUser.id, username: UnbannedUser.username, status: UnbannedUser.status, image: UnbannedUser.image}});
+                io.to(`User-${reciver.id}`).emit('User_ConnectToServer', {serverId: server.id, user: {_id: UnbannedUser.id, username: UnbannedUser.username, status: UnbannedUser.status, image: UnbannedUser.image}});
               }
             }
             return res.json({success: true});

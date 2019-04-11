@@ -29,5 +29,7 @@ module.exports.Events = {
   DialogMessage: 'User_SendMessage',
   ServerError: 'Server_Error',
   ServerRoomMessage: 'Server_MessageReceive',
-  DirectMessage: 'User_MessageReceive'
+  DirectMessage: 'User_MessageReceive',
+  Send_Request: 'User_SendRequest',
+  Cansel_Request: 'User_RequestCanseled'
 };

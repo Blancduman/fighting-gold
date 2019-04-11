@@ -6,12 +6,10 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
-  IconButton,
   DialogTitle
 } from '@material-ui/core';
-import { Clear } from '@material-ui/icons';
 
-export default class DialogBoxCreateServer extends React.Component {
+export default class FormDialog extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -24,29 +22,24 @@ export default class DialogBoxCreateServer extends React.Component {
     this.setState({value: value});
   }
   render() {
-    const { open, closeDialog, createServer } = this.props;
+    const { open, closeDialog, createNewRoom } = this.props;
     
     return (
       <Dialog
         open={open}
-        onClose={closeDialog}
+        onClose={this.props.closeDialog}
         aria-labelledby="form-dialog-title"
       >
-        <DialogTitle id="form-dialog-title">
-          Create server
-          <IconButton style={{float: 'right'}} color="inherit" onClick={closeDialog} aria-label="Close">
-            <Clear />
-          </IconButton>
-        </DialogTitle>
+        <DialogTitle id="form-dialog-title">Create room</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Название сервера:
+            To create room, please enter room name.
           </DialogContentText>
           <TextField
             autoFocus
             margin="dense"
             id="name"
-            label="Server name"
+            label="Room name"
             type="text"
             fullWidth
             onChange={e => this.handleChange(e.target.value)}
@@ -54,10 +47,10 @@ export default class DialogBoxCreateServer extends React.Component {
         </DialogContent>
         <DialogActions>
           <Button onClick={closeDialog} color="primary">
-            Отмена
+            Cancel
           </Button>
-          <Button onClick={() => createServer(this.state.value)} color="primary">
-            Создать
+          <Button onClick={() => createNewRoom(this.state.value)} color="primary">
+            Create
           </Button>
         </DialogActions>
       </Dialog>  

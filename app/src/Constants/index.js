@@ -19,7 +19,25 @@ export const SocketOn = {
   RequestOffline: 'RequestOnline',
   ServerRoomMessage: 'Server_MessageReceive',
   DirectMessage: 'User_MessageReceive',
-  ServerError: 'Server_Error'
+  ServerError: 'Server_Error',
+  Send_Request: 'User_SendRequest',
+  Accept_Request: 'User_RequestAccepted',
+  Send_Request: 'User_SendRequest',
+  Cansel_Request: 'User_RequestCanseled',
+  Remove_Friend: 'User_FriendRemoved',
+  Block_User: 'User_BlockUser',
+  Unblock_User: 'User_UnblockUser',
+  AddRoom: 'Server_CreateNewRoom',
+  AddServer: 'Server_ServerCreated',
+  RemoveServer: 'Server_ServerRemoved',
+  BanUser: 'Admin_UserBannedFromServer',
+  UnbanUser: 'Admin_UserUnbanned',
+  KickUser: 'Server_UserRemoved',
+  RemoveRoom: 'Server_RoomRemoved',
+  ServerUserUpdated: 'Server_UserProfileUpdated',
+  FriendUpdated: 'User_FriendProfileUpdated',
+  BlockedUpdated: 'User_BlockedProfileUpdated',
+  RequestUpdated: 'User_RequestProfileUpdated'
 }
 
 export const NotificationContainer = {
