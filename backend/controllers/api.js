@@ -1,25 +1,26 @@
-const User = require('./models/user'),
-      _Server = require('./models/server'),
-      Room = require('./models/room'),
-      RoomMessage = require('./models/roomMessage'),
-      DirectMessage = require('./models/directMessage'),
-      Dialog = require('./models/dialog'),
-      config = require('./config');
+const User = require('../models/user'),
+      _Server = require('../models/server'),
+      Room = require('../models/room'),
+      RoomMessage = require('../models/roomMessage'),
+      DirectMessage = require('../models/directMessage'),
+      Dialog = require('../models/dialog'),
+      config = require('../config'),
+      errorMessages = require('../constants').errorMessages;
 
-const errorMessages = {
-  ServerError: 'Произошла ошибка на сервере.',
-  UserExist: 'Пользователь с таким username/email уже существует.',
-  ServerName: 'Сервер с таким именем уже существует.',
-  Forbidden: 'У вас недостаточно прав.',
-  AccessDenied: 'Доступ запрещен. Войдите в систему.',
-  ServerNotFound: 'Сервер не найден.',
-  UsernameEmailExist: 'Такой username/email уже занят.',
-  UserUnfound: 'Пользователь не найдет.',
-  DialogSaveError: 'Ошибка при сохранении диалога.',
-  DialogCreateError: 'Ошибка при создании диалога.',
-  DialogUnfound: 'Диалог не найден.',
-  InvalidIds: 'Неверный id пользователя и/или сервера.'
-}
+// const errorMessages = {
+//   ServerError: 'Произошла ошибка на сервере.',
+//   UserExist: 'Пользователь с таким username/email уже существует.',
+//   ServerName: 'Сервер с таким именем уже существует.',
+//   Forbidden: 'У вас недостаточно прав.',
+//   AccessDenied: 'Доступ запрещен. Войдите в систему.',
+//   ServerNotFound: 'Сервер не найден.',
+//   UsernameEmailExist: 'Такой username/email уже занят.',
+//   UserUnfound: 'Пользователь не найдет.',
+//   DialogSaveError: 'Ошибка при сохранении диалога.',
+//   DialogCreateError: 'Ошибка при создании диалога.',
+//   DialogUnfound: 'Диалог не найден.',
+//   InvalidIds: 'Неверный id пользователя и/или сервера.'
+// }
 
 module.exports.auth = async function(req, res) {
   try {

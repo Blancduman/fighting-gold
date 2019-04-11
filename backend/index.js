@@ -26,6 +26,8 @@ const controllerAuth = require('./controllers/api').auth,
       controllerRemove_friend = require('./controllers/api').remove_friend,
       controllerUnblock_user = require('./controllers/api').unblock_user;
 
+const socketManager = require('./controllers/socketManager');
+
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
@@ -56,6 +58,12 @@ app.post('/api/server/remove_server', controllerRemove_server);
 app.post('/api/server/remove_room', controllerRemove_room);
 app.post('/api/server/edit_server', uploadImg.single('picture'), controllerEdit_server);
 
+io.use(socketioJwt.authorize({
+  secret: config.JWT_KEY,
+  handshake: true
+}));
+
+io.on('connection', socketManager);
 
 http.listen(config.port, () => {
   console.log('server is running');
