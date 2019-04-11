@@ -50,16 +50,18 @@ module.exports.register = async function(req, res) {
       ]);
       try {
         await User.findByIdAndUpdate(createdUser.id, { $push: { servers: { $each: servers } } });
-        for (const server of servers) {
-          io.toString(`Server-${server.id}`).emit('User_ConnectedToServer', {
-            serverId: server.id,
-            user: {
-              _id: createdUser.id,
-              username: createdUser.username,
-              status: createdUser.status,
-              image: createdUser.image
-            }
-          })
+        if (servers) {
+          for (const server of servers) {
+            io.toString(`Server-${server.id}`).emit('User_ConnectedToServer', {
+              serverId: server.id,
+              user: {
+                _id: createdUser.id,
+                username: createdUser.username,
+                status: createdUser.status,
+                image: createdUser.image
+              }
+            })
+          }
         }
         return res.json({ success: true });
       } catch (error) {
