@@ -42,7 +42,7 @@ module.exports = async function(socket) {
                         path: 'users', select: 'username status image', model: 'user'
                       },
                       {
-                        path: 'messages', select:'author value time', model: 'directMessage', populate: { path: 'author', select: 'status username image', model: 'user' } 
+                        path: 'messages', select:'author value time createdAt', model: 'directMessage', populate: { path: 'author', select: 'status username image', model: 'user' } 
                       }
                     ] 
                   },
@@ -51,7 +51,7 @@ module.exports = async function(socket) {
                       {
                         path: 'rooms', select: 'messages name typing',
                         populate: {
-                          path: 'messages', select:'author value time', model: 'roomMessage',
+                          path: 'messages', select:'author value time createdAt', model: 'roomMessage',
                           populate: {
                             path: 'author', model: 'user', select: 'status username image', model: 'user'
                           }
@@ -104,7 +104,7 @@ module.exports = async function(socket) {
                         path: 'users', select: 'username status image', model: 'user'
                       },
                       {
-                        path: 'messages', select:'author value time', model: 'directMessage', populate: { path: 'author', select: 'status username image', model: 'user' } 
+                        path: 'messages', select:'author value time createdAt', model: 'directMessage', populate: { path: 'author', select: 'status username image', model: 'user' } 
                       }
                     ] 
                   },
@@ -113,7 +113,7 @@ module.exports = async function(socket) {
                       {
                         path: 'rooms', select: 'messages name typing',
                         populate: {
-                          path: 'messages', select:'author value time', model: 'roomMessage',
+                          path: 'messages', select:'author value time createdAt', model: 'roomMessage',
                           populate: {
                             path: 'author', model: 'user', select: 'status username image', model: 'user'
                           }
@@ -262,7 +262,7 @@ module.exports = async function(socket) {
       try {
         const createdDialogMessage = await new DirectMessage({
           author: user,
-          value: data.message.value
+          value: data.value
         }).save();
         try {
           const updatedDialog = await Dialog.findByIdAndUpdate(dialog.id, {$push: {messages: createdDialogMessage}});

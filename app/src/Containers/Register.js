@@ -5,11 +5,10 @@ import {
   Typography,
   withStyles
 } from '@material-ui/core';
-import LoginForm from '../Components/LoginForm';
+import RegisterForm from '../Components/RegisterForm';
 import fetch from 'node-fetch';
 import { Link } from 'react-router-dom';
-import { connect } from 'react-redux';
-import { NotificationContainer, ServerAddress } from '../Constants';
+import { ServerAddress } from '../Constants';
 
 const styles = theme => ({
   main: {
@@ -32,24 +31,25 @@ const styles = theme => ({
   },
 });
 
-class Login extends React.Component {
-  SignIn(user) {
+class Register extends React.Component {
+  SignUp(user) {
+    const {push} = this.props.history;
     const { setNotification } = this.props;
-    const { email, password } = user;
+    const { username, email, password } = user;
     let formData = new FormData({
+      username: username,
       email: email,
       password: password
     });
-    fetch(`${ServerAddress}/api/user/auth`, {
+    fetch(`${ServerAddress}/api/user/register`, {
       method: 'post',
       body: formData
     }).then(function(response) {
       response.json()
         .then(result => {
           if (result.success) {
-            localStorage.setItem('token', result.token);
-            window.location.replace('/');
-            setNotification('success', 'Вход выполнен.');
+            push('/login');
+            setNotification('success', 'Пользователь успешно создан');
           } else {
             setNotification('error', result.message);
           }
@@ -64,13 +64,12 @@ class Login extends React.Component {
         <CssBaseline />
         <Paper className={classes.paper}>
           <Typography component="h1" variant="h5">
-            Login
+            Registration
           </Typography>
-
-          <LoginForm signIn={this.SignIn} />
+          <RegisterForm signUp={this.SignUp} />
 
           <Typography>
-            Need an account? <Link to={'/register'}>Registration</Link>
+            Already have an account? <Link to={'/login'}>Login</Link>
           </Typography>
         </Paper>
       </main>
@@ -88,4 +87,4 @@ const mapDispatchToProps = dispatch => {
   }
 }
 
-export default withStyles(styles)(connect(null, mapDispatchToProps)(Login));
+export default withStyles(styles)(connect(null, mapDispatchToProps)(Register));

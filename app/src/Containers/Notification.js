@@ -133,8 +133,8 @@ class CustomizedSnackbars extends React.Component {
 
 const mapStateToProps = state => {
   return {
-    variant: state.notificationSide.variant,
-    message: state.notificationSide.message
+    variant: state.NotificationSide.variant,
+    message: state.NotificationSide.message
   }
 };
 

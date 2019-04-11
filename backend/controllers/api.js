@@ -475,7 +475,7 @@ module.exports.accept_request = async function(req, res) {
       }
     }
   } catch (error) {
-    console.log('/api/user/cansel_request 1 try', error);
+    console.log('/api/user/accept_request 1 try', error);
     return res.json({success: false, message: errorMessages.AccessDenied, logout: true});
   }
 };
@@ -518,7 +518,7 @@ module.exports.remove_friend = async function(req, res) {
   try {
     const [user, oldFriend] = await Promise.all([
       User.findById(jwt.verify(req.body.token, config.JWT_KEY)),
-      User.findById(req.body.oldFriend)
+      User.findById(req.body.oldFriendId)
     ]);
     try {
       if (user && oldFriend) {
@@ -569,7 +569,7 @@ module.exports.block_user = async function(req, res) {
         {path: 'requests.to', select: 'id', model: 'user'},
         {path: 'requests.from', select: 'id', model: 'user'},
       ]).exec(),,
-      User.findById(req.body.blockingUser).populate([
+      User.findById(req.body.blockingUserId).populate([
         {path: 'requests.to', select: 'id', model: 'user'},
         {path: 'requests.from', select: 'id', model: 'user'},
       ]).exec(),
