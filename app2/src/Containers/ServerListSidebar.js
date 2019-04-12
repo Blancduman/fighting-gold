@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
-import { serversContainer, ServerAddress } from '../Constants';
+import { serversContainer, ServerAddress, NotificationContainer } from '../Constants';
 import {
   List,
   ListItem,
@@ -54,16 +54,15 @@ class ServerListSidebar extends React.Component {
       openDialog: false,
     });
   }
-
   createServer(serverName) {
     this.closeDialogCreateServer();
-    let formData = new FormData({
-      token: localStorage.getItem('token'),
-      serverName: serverName
-    });
+    const { setNotification } = this.props;
     fetch(`${ServerAddress}/api/server/create_server`, {
       method: 'post',
-      body: formData
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token: localStorage.getItem('token'), serverName: serverName })
     }).then(function(response) {
       response.json()
         .then(result => {
@@ -152,6 +151,11 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
   return {
+    setNotification: (variant, message) => dispatch({
+      type: NotificationContainer.SET_NOTIFICATION,
+      variant: variant,
+      message: message
+    }),
     setActiveServerId: id => dispatch({ type: serversContainer.SET_ACTIVE_SERVER_ID, serverId: id})
   }
 }

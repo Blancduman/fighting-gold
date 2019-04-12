@@ -20,7 +20,7 @@ var UserSchema = new mongoose.Schema({
   },
   image: {
     type: String,
-    default: 'default_user.png'
+    default: '/default_user.png'
   },
   hash: String,
   salt: String,
@@ -28,7 +28,6 @@ var UserSchema = new mongoose.Schema({
     type: String,
     default: 'Offline'
   },
-  image: String,
   dialogs: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'dialog'
@@ -67,8 +66,8 @@ UserSchema.virtual('password')
   .set(function (password) {
     this._plainPassword = password;
     if (password) {
-      this.salt = crypto.randomBytes(128).toString('base64');
-      this.hash = crypto.pbkdf2Sync(password, this.salt, 1, 128, 'sha1');
+      this.salt = crypto.randomBytes(16).toString('hex');
+      this.hash = crypto.pbkdf2Sync(password, this.salt, 10000, 512, 'sha512').toString('hex');
     } else {
       this.salt = undefined;
       this.hash = undefined;
@@ -81,7 +80,7 @@ UserSchema.virtual('password')
 UserSchema.methods.validPassword = function(password) {
   if (!password) return false;
   if (!this.hash) return false;
-  return this.hash === crypto.pbkdf2Sync(password, this.salt, 1, 128, 'sha1');
+  return this.hash === crypto.pbkdf2Sync(password, this.salt, 10000, 512, 'sha512').toString('hex');
 };
 
 module.exports = mongoose.model('user', UserSchema, 'user');

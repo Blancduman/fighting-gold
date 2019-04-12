@@ -81,12 +81,6 @@ function MySnackbarContent(props) {
 
 const MySnackbarContentWrapper = withStyles(styles1)(MySnackbarContent);
 
-const styles2 = theme => ({
-  margin: {
-    margin: theme.spacing.unit,
-  },
-});
-
 class CustomizedSnackbars extends React.Component {
   state = {
     open: false,

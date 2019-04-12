@@ -33,16 +33,21 @@ const styles = theme => ({
 });
 
 class Login extends React.Component {
+  constructor(props) {
+    super(props);
+
+    this.SignIn = this.SignIn.bind(this);
+  }
   SignIn(user) {
     const { setNotification } = this.props;
     const { email, password } = user;
-    let formData = new FormData({
-      email: email,
-      password: password
-    });
+    
     fetch(`${ServerAddress}/api/user/auth`, {
       method: 'post',
-      body: formData
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email: email, password: password })
     }).then(function(response) {
       response.json()
         .then(result => {

@@ -4,8 +4,10 @@ import Login from './Containers/Login';
 import Register from './Containers/Register';
 import Home from './Containers/Home';
 import ServerWrapper from './Containers/ServerWrapper';
+import { connect } from 'react-redux';
+import io from 'socket.io-client';
 import {
-  UserConstants, serversContainer, homeConstants, SocketConstants, ServerAddress, SocketOn, SocketEmit
+  NotificationContainer, UserConstants, serversContainer, homeConstants, SocketConstants, ServerAddress, SocketOn, SocketEmit
 } from './Constants';
 
 const PrivateRoute = ({ component: Component, ...rest }) => (
@@ -26,86 +28,94 @@ const AuthRoute = ({ component: Component, ...rest }) => (
 
 class App extends React.Component {
   componentWillMount() {
-    const socket = io(socketUrl, {
-      'query': `token=${localStorage.getItem('token')}`
-    }).on(SocketOn.LoadApp, data => {
-      data.isAdmin 
-      ? this.props.setUser({ _id: data._id, username: data.username, email: data.email, isAdmin: true, image: data.image })
-      : this.props.setUser({ _id: data._id, username: data.username, email: data.email, image: data.image });
-      this.props.setFriends(data.friends);
-      this.props.setServers(data.servers.map((server) => { return { ...server, activeRoomId: server.rooms[0]._id }}));
-      this.props.setBlocked(data.blocked);
-      this.props.setDialogs(data.dialogs);
-      this.props.setRequests(data.requests);
-    }).on(SocketOn.ServerRoomMessage , data => {
-      this.props.receiveServerMessage(data);
-    }).on(SocketOn.DirectMessage , data => {
-      this.props.receiveDialogMessage(data);
-    }).on(SocketOn.ConnectToServer , data => {
-      this.props.userConnectedToServer(data.user, data.serverId);
-    }).on(SocketOn.FriendOnline , data => {
-      this.props.friendConnected(data.user._id);
-    }).on(SocketOn.FriendOffline , data => {
-      this.props.friendDisconnected(data.user._id);
-    }).on(SocketOn.BlockedOnline , data => {
-      this.props.blockedConnected(data.user._id);
-    }).on(SocketOn.BlockedOffline , data => {
-      this.props.blockedDisconnected(data.user._id);
-    }).on(SocketOn.RequestOnline , data => {
-      this.props.requestConnected(data.user._id);
-    }).on(SocketOn.RequestOffline , data => {
-      this.props.requestDisconnected(data.user._id);
-    }).on(SocketOn.Send_Request , data => {
-      this.props.addFriendRequest(data.to, data.from);
-    }).on(SocketOn.Cansel_Request , data => {
-      this.props.friendRequestCanseled(data.userId);
-    }).on(SocketOn.Accept_Request , data => {
-      this.props.addFriend(data.user, data.dialog);
-    }).on(SocketOn.Remove_Friend , data => {
-      this.props.removeFriend(data.friendId, data.dialogId);
-    }).on(SocketOn.Block_User , data => {
-      this.props.blockUser(data.blocked, data.dialogId);
-    }).on(SocketOn.Unblock_User , data => {
-      this.props.unblockUser(data.unblockedId);
-    }).on(SocketOn.DisconnectFromServer , data => {
-      this.props.UserDisconnectedFromServer(data.user, data.serverId);
-    }).on(SocketOn.AddRoom , data => {
-      this.props.addNewRoomInServer(data.serverId, data.room);
-    }).on(SocketOn.AddServer , data => {
-      this.props.addNewServer(data.server);
-      socket.emit(SocketEmit.JoinToServer, {serverId: result.server._id});
-    }).on(SocketOn.RemoveServer , data => {
-      this.props.removeServer(data.serverId)
-    }).on(SocketOn.BanUser , data => {
-      this.props.adminBanUserFromServer(data.serverId, data.user);
-    }).on(SocketOn.KickUser , data => {
-      this.props.removeUserFromServer(data.serverId, data.userId, this.props.user._id);
-    }).on(SocketOn.UnbanUser , data => {
-      this.props.adminRemoveFromBanList(data.serverId, data.user);
-    }).on(SocketOn.RemoveRoom , data => {
-      this.props.removeRoomFromServer(data.serverId, data.roomId);
-    }).on(SocketOn.ServerUserUpdated , data => {
-      this.props.serverUserChanged(data.server, data.user);
-    }).on(SocketOn.FriendUpdated , data => {
-      this.props.friendChanged(data.user);
-    }).on(SocketOn.BlockedUpdated , data => {
-      this.props.blockedChanged(data.user);
-    }).on(SocketOn.RequestUpdated , data => {
-      this.props.requestChanged(data.user);
-    }).on(SocketOn.Logout, () => {
-      localStorage.removeItem('token');
-      window.location.reload();
-    }).on(SocketOn.ServerError, data => {
-      this.props.setNotification(data.variant, data.message);
-    })
+    const token = localStorage.getItem('token');
+    if (token) {
+      const socket = io(ServerAddress, {
+        'query': `token=${token}`
+      }).on(SocketOn.LoadApp, data => {
+        data.isAdmin 
+        ? this.props.setUser({ _id: data._id, username: data.username, email: data.email, isAdmin: true, image: data.image })
+        : this.props.setUser({ _id: data._id, username: data.username, email: data.email, image: data.image });
+        this.props.setFriends(data.friends);
+        this.props.setServers(data.servers.map((server) => { return { ...server, activeRoomId: server.rooms[0]._id }}));
+        this.props.setBlocked(data.blocked);
+        this.props.setDialogs(data.dialogs);
+        this.props.setRequests(data.requests);
+      }).on(SocketOn.ServerRoomMessage , data => {
+        this.props.receiveServerMessage(data);
+      }).on(SocketOn.DirectMessage , data => {
+        this.props.receiveDialogMessage(data);
+      }).on(SocketOn.ConnectToServer , data => {
+        this.props.userConnectedToServer(data.user._id, data.serverId);
+      }).on(SocketOn.FriendOnline , data => {
+        this.props.friendConnected(data.user._id);
+      }).on(SocketOn.FriendOffline , data => {
+        this.props.friendDisconnected(data.user._id);
+      }).on(SocketOn.BlockedOnline , data => {
+        this.props.blockedConnected(data.user._id);
+      }).on(SocketOn.BlockedOffline , data => {
+        this.props.blockedDisconnected(data.user._id);
+      }).on(SocketOn.RequestOnline , data => {
+        this.props.requestConnected(data.user._id);
+      }).on(SocketOn.RequestOffline , data => {
+        this.props.requestDisconnected(data.user._id);
+      }).on(SocketOn.Send_Request , data => {
+        this.props.addFriendRequest(data.to, data.from);
+      }).on(SocketOn.Cansel_Request , data => {
+        this.props.friendRequestCanseled(data.userId);
+      }).on(SocketOn.Accept_Request , data => {
+        this.props.addFriend(data.user, data.dialog);
+      }).on(SocketOn.Remove_Friend , data => {
+        this.props.removeFriend(data.friendId, data.dialogId);
+      }).on(SocketOn.Block_User , data => {
+        this.props.blockUser(data.blocked, data.dialogId);
+      }).on(SocketOn.Unblock_User , data => {
+        this.props.unblockUser(data.unblockedId);
+      }).on(SocketOn.DisconnectFromServer , data => {
+        this.props.UserDisconnectedFromServer(data.user, data.serverId);
+      }).on(SocketOn.AddRoom , data => {
+        this.props.addNewRoomInServer(data.serverId, data.room);
+      }).on(SocketOn.AddServer , data => {
+        this.props.addNewServer(data.server);
+        socket.emit(SocketEmit.JoinToServer, {serverId: data.server._id});
+      }).on(SocketOn.RemoveServer , data => {
+        this.props.removeServer(data.serverId)
+      }).on(SocketOn.BanUser , data => {
+        this.props.adminBanUserFromServer(data.serverId, data.user);
+      }).on(SocketOn.KickUser , data => {
+        this.props.removeUserFromServer(data.serverId, data.userId, this.props.user._id);
+      }).on(SocketOn.UnbanUser , data => {
+        this.props.adminRemoveFromBanList(data.serverId, data.user);
+      }).on(SocketOn.RemoveRoom , data => {
+        this.props.removeRoomFromServer(data.serverId, data.roomId);
+      }).on(SocketOn.ServerUserUpdated , data => {
+        this.props.serverUserChanged(data.server, data.user);
+      }).on(SocketOn.FriendUpdated , data => {
+        this.props.friendChanged(data.user);
+      }).on(SocketOn.BlockedUpdated , data => {
+        this.props.blockedChanged(data.user);
+      }).on(SocketOn.RequestUpdated , data => {
+        this.props.requestChanged(data.user);
+      }).on(SocketOn.UserJoinServer, data => {
+        this.props.newUserJoinedToServer(data.serverId, data.user);
+      }).on(SocketOn.ServerUpdated, data => {
+        this.props.setNewChangesToServer(data.serverId, data.server);
+      }).on(SocketOn.Logout, () => {
+        localStorage.removeItem('token');
+        window.location.reload();
+      }).on(SocketOn.ServerError, data => {
+        this.props.setNotification(data.variant, data.message);
+      });
+      this.props.setSocket(socket);
+    }
   }
   render() {
     return (
         <BrowserRouter>
           <Switch>
             <PrivateRoute exact path="/" component={Home} />
-            <AuthRoute path="/login" component={login} />
-            <AuthRoute path="/register" component={register}/>
+            <AuthRoute path="/login" component={Login} />
+            <AuthRoute path="/register" component={Register}/>
             <PrivateRoute path="/server/:server_id" component={ServerWrapper} />
           </Switch>
         </BrowserRouter>
@@ -142,7 +152,7 @@ const mapDispatchToProps = dispatch => {
     requestDisconnected: userId => dispatch({ type: UserConstants.REQUEST_DISCONNECTED, userId: userId }),
     blockUser: (blocked, dialogId) => dispatch({ type: UserConstants.USER_BLOCK, blocked: blocked, dialogId: dialogId }),
     unblockUser: (unblockedId) => dispatch({ type: UserConstants.USER_UNBLOCK, unblockedId: unblockedId }),
-    userConnectedToServer: (user, serverId) => dispatch({ type: serversContainer.USER_CONNECTED_TO_SERVER, user: user, serverId: serverId }),
+    userConnectedToServer: (userId, serverId) => dispatch({ type: serversContainer.USER_CONNECTED_TO_SERVER, userId: userId, serverId: serverId }),
     UserDisconnectedFromServer: (user, serverId) => dispatch({ type: serversContainer.USER_DISCONNECTED_FROM_SERVER, user: user, serverId: serverId }),
     setActiveServer: serverId => dispatch({ type: serversContainer.SET_ACTIVE_SERVER_ID, serverId: serverId }),
     newUserJoinedToServer: (serverId, user) => dispatch({type: serversContainer.NEW_USER_JOINED_TO_SERVER, serverId: serverId, user: user}),

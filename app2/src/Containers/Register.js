@@ -5,10 +5,13 @@ import {
   Typography,
   withStyles
 } from '@material-ui/core';
+import { connect } from 'react-redux';
 import RegisterForm from '../Components/RegisterForm';
 import fetch from 'node-fetch';
 import { Link } from 'react-router-dom';
 import { ServerAddress } from '../Constants';
+import { withRouter } from 'react-router';
+import { NotificationContainer } from '../Constants';
 
 const styles = theme => ({
   main: {
@@ -32,18 +35,21 @@ const styles = theme => ({
 });
 
 class Register extends React.Component {
+  constructor(props) {
+    super(props);
+    this.SignUp = this.SignUp.bind(this);
+  }
   SignUp(user) {
     const {push} = this.props.history;
     const { setNotification } = this.props;
     const { username, email, password } = user;
-    let formData = new FormData({
-      username: username,
-      email: email,
-      password: password
-    });
+    
     fetch(`${ServerAddress}/api/user/register`, {
       method: 'post',
-      body: formData
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ username: username, email: email, password: password })
     }).then(function(response) {
       response.json()
         .then(result => {

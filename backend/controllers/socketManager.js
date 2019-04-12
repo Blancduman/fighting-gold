@@ -28,9 +28,10 @@ const User = require('../models/user'),
 
 module.exports = async function(socket) {
   try {
-    if(await User.findById(socket.decoded_token._id).isAdmin) {
-      const user = await User.findByIdAndUpdate(client.decoded_token._id, {status: 'Online'})
-      .select('username image email')
+    const _user = await User.findById(socket.decoded_token._id);
+    if(_user.isAdmin) {
+      const user = await User.findByIdAndUpdate(socket.decoded_token._id, {status: 'Online'})
+      .select('username image email isAdmin')
       .populate([
                   { path: 'friends', select: 'status username image', model: 'user' },
                   { path: 'blocked', select: 'status username image', model: 'user'},
@@ -69,8 +70,8 @@ module.exports = async function(socket) {
       socket.join(`User-${user.id}`);
       if (user.servers) {
         for (const server of user.servers) {
-          client.join(`Server-${server.id}`);
-          io.to(`Server-${server.id}`).emit(Events.ConnectToServer, { server: server.id, user: { _id: user.id, username: user.username, status: user.status, image: user.image } });
+          socket.join(`Server-${server.id}`);
+          io.to(`Server-${server.id}`).emit(Events.ConnectToServer, { serverId: server.id, user: { _id: user.id, username: user.username, status: user.status, image: user.image } });
         }
       }
       if (user.friends) {
@@ -91,7 +92,7 @@ module.exports = async function(socket) {
       }
       socket.emit(Events.LoadApp, user);
     } else if (await User.findById(socket.decoded_token._id)) {
-      const user = await User.findByIdAndUpdate(client.decoded_token._id, {status: 'Online'})
+      const user = await User.findByIdAndUpdate(socket.decoded_token._id, {status: 'Online'})
       .select('username image email')
       .populate([
                   { path: 'friends', select: 'status username image', model: 'user' },
@@ -129,8 +130,8 @@ module.exports = async function(socket) {
         socket.join(`User-${user.id}`);
         if (user.servers) {
           for (const server of user.servers) {
-            client.join(`Server-${server.id}`);
-            io.to(`Server-${server.id}`).emit(Events.ConnectToServer, { server: server.id, user: { _id: user.id, username: user.username, status: user.status, image: user.image } });
+            socket.join(`Server-${server.id}`);
+            io.to(`Server-${server.id}`).emit(Events.ConnectToServer, { serverId: server.id, user: { _id: user.id } });
           }
         }
         if (user.friends) {
@@ -163,9 +164,9 @@ module.exports = async function(socket) {
   
   socket.on(Events.JoinToServer, async data => {
     try {
-      const user = await User.findById(client.decoded_token._id).select('id username status image').exec();
+      const user = await User.findById(socket.decoded_token._id).select('id username status image').exec();
       if (user) {
-        client.join(`Server-${data.serverId}`);
+        socket.join(`Server-${data.serverId}`);
         io.to(`Server-${data.serverId}`).emit('UserJoinedToServer', { serverId: data.serverId, user: { _id: user.id, username: user.username, status: user.status, image: user.image } });
       } else {
         socket.emit(Events.Logout);
@@ -177,7 +178,7 @@ module.exports = async function(socket) {
 
   socket.on('disconnect', async () => {
     try {
-      const user = await User.findByIdAndUpdate(client.decoded_token._id, {status: 'Offline'}).populate([
+      const user = await User.findByIdAndUpdate(socket.decoded_token._id, {status: 'Offline'}).populate([
         {path: 'servers', select: 'id', model:'server'},
         {path: 'friends', select: 'id', model:'user'},
         {path: 'blocked', select: 'id', model:'user'},
@@ -187,7 +188,7 @@ module.exports = async function(socket) {
       if (user.servers) {
         for (const server of user.servers) {
           io.to(`Server-${server.id}`).emit(Events.DisconnectFromServer, { user: { _id: user.id }, serverId: server.id });
-          client.leave(`Server-${server.id}`);
+          socket.leave(`Server-${server.id}`);
         }
       }
       if (user.friends) {
@@ -216,8 +217,8 @@ module.exports = async function(socket) {
   socket.on(Events.ServerMessage, async data => {
     try {
       const [user, server] = await Promise.all([
-        User.findById(client.decoded_token._id),
-        _Server.findById(data.serverId).populate({path: 'users', select: 'id', model: 'user'}).exec(),
+        User.findById(socket.decoded_token._id),
+        _Server.findById(data.serverId).populate({path: 'users', select: 'username image status', model: 'user'}).exec(),
       ]);
       try {
         const createdRoomMessage = await new RoomMessage({
@@ -225,7 +226,13 @@ module.exports = async function(socket) {
           value: data.message.value
         }).save();
         try {
-          const updatedRoom = await Room.findByIdAndUpdate(data.room, {$push: {messages: createdRoomMessage}});
+          await Room.findByIdAndUpdate(data.roomId, {$push: {messages: createdRoomMessage}});
+          const updatedRoom = await Room.findById(data.roomId).populate({
+            path: 'messages', select:'author value time createdAt', model: 'roomMessage',
+            populate: {
+              path: 'author', model: 'user', select: 'status username image', model: 'user'
+            }
+          });
           io.to(`Server-${server.id}`).emit(Events.ServerRoomMessage, {
             server: server.id,
             room: updatedRoom.id,
@@ -256,8 +263,8 @@ module.exports = async function(socket) {
   socket.on(Events.DialogMessage, async data => {
     try {
       const [user, dialog] = await Promise.all([
-        User.findById(client.decoded_token._id),
-        Dialog.findById(data.dialogId).populate({path: 'users', select: 'id', model: 'user'}).exec(),
+        User.findById(socket.decoded_token._id),
+        Dialog.findById(data.dialogId).populate({path: 'users', select: 'username image status', model: 'user'}).exec(),
       ]);
       try {
         const createdDialogMessage = await new DirectMessage({
@@ -265,7 +272,8 @@ module.exports = async function(socket) {
           value: data.value
         }).save();
         try {
-          const updatedDialog = await Dialog.findByIdAndUpdate(dialog.id, {$push: {messages: createdDialogMessage}});
+          const updatedDialog = await Dialog.findByIdAndUpdate(dialog.id, {$push: {messages: createdDialogMessage}}).populate({path: 'users', select: 'username image status', model: 'user'}).exec();
+          //const updatedDialog = await Dialog.findById(dialog.id).populate({path: 'users', select: 'username image status', model: 'user'}).exec();
           let message = {
             dialog: updatedDialog.id,
             message: {

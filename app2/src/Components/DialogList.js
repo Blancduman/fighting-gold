@@ -106,7 +106,9 @@ const mergeSort = (function () {
 function DialogList(props) {
   const {openUserProfile, user, dialogs, activeDialogId, setActiveDialog, classes} = props;
   const dialogList = dialogs
-  ? mergeSort(dialogs).map(dialog => {
+  ? dialogs.sort(function(a,b){
+    return new Date(b.createdAt) - new Date(a.createdAt);
+  }).map(dialog => {
       let author = dialog.users[0]._id === user._id ? dialog.users[1] : dialog.users[0];
       if (dialog.messages.length > 0) {
         let lastMessage = dialog.messages[dialog.messages.length - 1];
@@ -145,7 +147,7 @@ function DialogList(props) {
           >
 
             <ListItemAvatar>
-              <Avatar src={`${serverAddress}${author.image}`} />
+              <Avatar src={`${ServerAddress}${author.image}`} />
             </ListItemAvatar>
 
             <ListItemText

@@ -25,9 +25,9 @@ class RegisterForm extends React.Component {
 
     this.state = {
       user: {
-        username: '',
-        email: '',
-        password: '',
+        username: 'test1',
+        email: 'test1@gmail.com',
+        password: '12345',
       },
       error: {
         username: '',

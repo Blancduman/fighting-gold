@@ -22,7 +22,6 @@ export const SocketOn = {
   ServerError: 'Server_Error',
   Send_Request: 'User_SendRequest',
   Accept_Request: 'User_RequestAccepted',
-  Send_Request: 'User_SendRequest',
   Cansel_Request: 'User_RequestCanseled',
   Remove_Friend: 'User_FriendRemoved',
   Block_User: 'User_BlockUser',
@@ -37,7 +36,9 @@ export const SocketOn = {
   ServerUserUpdated: 'Server_UserProfileUpdated',
   FriendUpdated: 'User_FriendProfileUpdated',
   BlockedUpdated: 'User_BlockedProfileUpdated',
-  RequestUpdated: 'User_RequestProfileUpdated'
+  RequestUpdated: 'User_RequestProfileUpdated',
+  ServerUpdated: 'Server_ServerUpdated',
+  UserJoinServer: 'User_UserJoinedToServer'
 }
 
 export const NotificationContainer = {

@@ -40,7 +40,7 @@ class Home extends React.Component {
 
   SaveUserProfileChanges(username, email, password, image) {
     this.CloseUserProfile();
-    const {setUserUpdates} = this.props;
+    const {setUserUpdates, setNotification} = this.props;
     let formData = new FormData();
     formData.append('token', localStorage.getItem('token'));
     if (username) formData.append('username', username);
@@ -85,8 +85,10 @@ class Home extends React.Component {
   SendMessage() {
     const { dialogs, activeDialogId } = this.props;
     const dialog = dialogs.find(dialog => { return dialog._id === activeDialogId });
-    this.props.socket.emit(SocketEmit.DialogMessage, { dialog: dialog._id, value: dialog.typing });
-    this.props.setDialogTyping('');
+    if (dialog.typing.length > 0) {
+      this.props.socket.emit(SocketEmit.DialogMessage, { dialogId: dialog._id, value: dialog.typing });
+      this.props.setDialogTyping('');
+    }
   }
 
   SelectUserForDialogBox() {
@@ -111,13 +113,13 @@ class Home extends React.Component {
   }
   
   handleRemoveFromBlock(blockId) {
-    let formData = new FormData({
-      token: localStorage.getItem('token'),
-      blockedUserId: blockId
-    });
+    const { setNotification } = this.props;
     fetch(`${ServerAddress}/api/user/unblock_user`, {
       method: 'post',
-      body: formData
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token: localStorage.getItem('token'), blockedUserId: blockId})
     }).then(function(response) {
       response.json()
         .then(result => {
@@ -134,13 +136,13 @@ class Home extends React.Component {
   }
   
   handleAcceptFriend(newFriendId) {
-    let formData = new FormData({
-      token: localStorage.getItem('token'),
-      newFriendId: newFriendId
-    });
+    const { setNotification } = this.props;
     fetch(`${ServerAddress}/api/user/accept_request`, {
       method: 'post',
-      body: formData
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token: localStorage.getItem('token'), newFriendId: newFriendId})
     }).then(function(response) {
       response.json()
         .then(result => {
@@ -156,13 +158,13 @@ class Home extends React.Component {
     });
   }
   handleCanselFriendRequest(newFriendId) {
-    let formData = new FormData({
-      token: localStorage.getItem('token'),
-      newFriendId: newFriendId
-    });
+    const { setNotification } = this.props;
     fetch(`${ServerAddress}/api/user/cansel_request`, {
       method: 'post',
-      body: formData
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token: localStorage.getItem('token'), newFriendId: newFriendId})
     }).then(function(response) {
       response.json()
         .then(result => {
@@ -178,13 +180,13 @@ class Home extends React.Component {
     });
   }
   handleRemoveFriend(oldFriendId) {
-    let formData = new FormData({
-      token: localStorage.getItem('token'),
-      oldFriendId: oldFriendId
-    });
+    const { setNotification } = this.props;
     fetch(`${ServerAddress}/api/user/remove_friend`, {
       method: 'post',
-      body: formData
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token: localStorage.getItem('token'), oldFriendId: oldFriendId})
     }).then(function(response) {
       response.json()
         .then(result => {
@@ -201,13 +203,13 @@ class Home extends React.Component {
     this.CloseDialogBox()
   }
   handleBlockUser(blockingUserId) {
-    let formData = new FormData({
-      token: localStorage.getItem('token'),
-      blockingUserId: blockingUserId
-    });
+    const { setNotification } = this.props;
     fetch(`${ServerAddress}/api/user/block_user`, {
       method: 'post',
-      body: formData
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token: localStorage.getItem('token'), blockingUserId: blockingUserId})
     }).then(function(response) {
       response.json()
         .then(result => {
@@ -238,11 +240,11 @@ class Home extends React.Component {
         dialog ?
           <div style={{ width: '100%' }}>
             <Card style={{ marginBottom: 2, textAlign: 'left', width: '100%' }}>
-              <CardHeader onClick={() => this.selectUserForDialogBox()} style={{ paddingBottom: 17, marginTop: 6 }} title={dialog.users[0]._id === user._id ? dialog.users[1].username : dialog.users[0].username} />
+              <CardHeader onClick={() => this.SelectUserForDialogBox()} style={{ paddingBottom: 17, marginTop: 6 }} title={dialog.users[0]._id === user._id ? dialog.users[1].username : dialog.users[0].username} />
             </Card>
           <div style={{display: 'flex', paddingLeft: 3 }}>  
             <div style={{ width: '100%' }}>
-              <Chat messages={dialog.messages} />
+              <Chat messages={dialog.messages} selectUser={this.SelectUserForDialogBox} />
               <MessageInput
                 setTypingValue={this.props.setDialogTyping}
                 sendMessage={this.SendMessage}
@@ -250,10 +252,10 @@ class Home extends React.Component {
               />
             </div>
           </div>
-          <DialogBoxSelectUser open={this.state.open} selectedUser={this.state.selectedUser} handleClose={this.closeDialogBox} buttons={this.state.buttons}/>
+          <DialogBoxSelectUser open={this.state.open} selectedUser={this.state.selectedUser} handleClose={this.CloseDialogBox} buttons={this.state.buttons}/>
         </div> : <div></div>;
     } else {
-      <div></div>
+      return <div></div>
     }
       
     const FriendsWindow = (
@@ -263,7 +265,7 @@ class Home extends React.Component {
     return (
         <div style={{display:'inline-flex', width:'100%'}}>
           <ServerListSidebar/>
-          <DialogList openUserProfile={this.OpenUserProfile} user={this.props.user} dialogs={this.props.dialogs} activeDialogId={this.props.activeDialogId} setActiveDialog={this.props.setActiveDialogId} />
+          <DialogList openUserProfile={this.OpenUserProfile} user={user} dialogs={dialogs} activeDialogId={activeDialogId} setActiveDialog={this.props.setActiveDialogId} />
           { activeDialogId !== ''
             ? ChatWindow
             : FriendsWindow }

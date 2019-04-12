@@ -84,56 +84,58 @@ const mergeSort = (function () {
 
 function ServerUserList(props) {
   const { users, classes, selectUser } = props;
-  return (
-    <Paper style={{height: '92vh', overflow: 'auto', float: 'left', overflowX:'hidden', width:'320px'}}>
-    <nav className={classes.drawer}>
-      <List className={classes.root}>
-        <ListSubheader component='div'>Online</ListSubheader>
-        {
-          users.map(user => {
-            if (user.status === 'Online')
-              return (
-                <ListItem
-                  onClick={() => selectUser(user._id)}
-                  button
-                  alignItems='flex-start'
-                  key={user._id}
-                >
-                  <ListItemAvatar>
-                    <Avatar alt={user.username} src={`${ServerAddress}${user.image}`} />
-                  </ListItemAvatar>
-                  <ListItemText
-                    primary={user.username}
-                  />
-                </ListItem>
-              )
-          })
-        }
-        <ListSubheader component='div'>Offline</ListSubheader>
-        {
-          users.map(user => {
-            if (user.status === 'Offline')
-              return (
-                <ListItem
-                  onClick={() => selectUser(user._id)}
-                  button
-                  alignItems='flex-start'
-                  key={user._id}
-                >
-                  <ListItemAvatar>
-                    <Avatar alt={user.username} src={`${ServerAddress}${user.image}`} />
-                  </ListItemAvatar>
-                  <ListItemText
-                    primary={user.username}
-                  />
-                </ListItem>
-              )
-          })
-        }
-      </List>
-    </nav>
-  </Paper>
-  )
+  if (users) {
+    const online = users.map(user => {
+      if (user.status === 'Online')
+        return (
+          <ListItem
+            onClick={() => selectUser(user._id)}
+            button
+            alignItems='flex-start'
+            key={user._id}
+          >
+            <ListItemAvatar>
+              <Avatar alt={user.username} src={`${ServerAddress}${user.image}`} />
+            </ListItemAvatar>
+            <ListItemText
+              primary={user.username}
+            />
+          </ListItem>
+        )
+    });
+    const offline = users.map(user => {
+      if (user.status === 'Offline')
+        return (
+          <ListItem
+            onClick={() => selectUser(user._id)}
+            button
+            alignItems='flex-start'
+            key={user._id}
+          >
+            <ListItemAvatar>
+              <Avatar alt={user.username} src={`${ServerAddress}${user.image}`} />
+            </ListItemAvatar>
+            <ListItemText
+              primary={user.username}
+            />
+          </ListItem>
+        )
+    });
+    return (
+      <Paper style={{height: '92vh', overflow: 'auto', float: 'left', overflowX:'hidden', width:'320px'}}>
+      <nav className={classes.drawer}>
+        <List className={classes.root}>
+          <ListSubheader component='div'>Online</ListSubheader>
+          {online}
+          <ListSubheader component='div'>Offline</ListSubheader>
+          {offline}
+        </List>
+      </nav>
+    </Paper>
+    )
+  } else {
+    return <div></div>
+  }
 }
 
 export default withStyles(styles)(ServerUserList);

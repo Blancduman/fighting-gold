@@ -25,8 +25,8 @@ class LoginForm extends React.Component {
 
     this.state = {
       user: {
-        email: '',
-        password: '',
+        email: 'test1@gmail.com',
+        password: '12345',
       },
       error: {
         email: '',

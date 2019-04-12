@@ -187,12 +187,12 @@ export default function reducer(state = { }, action = {}) {
       if (state.servers) {
         servers = state.servers.map(server => {
           if (server._id === action.serverId) {
-            server.users.map(_user => {
-              if (_user._id === action.user._id)
-                _user.status = 'Online';
-                return _user;
+            server.users = server.users.map(user => {
+              if (user._id === action.userId) {
+                user.status = 'Online';
+              }
+              return user;
             });
-            return server;
           }
           return server;
         });

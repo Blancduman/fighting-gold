@@ -24,11 +24,15 @@ const User = require('../models/user'),
 
 module.exports.auth = async function(req, res) {
   try {
-    const user = await User.findOne({email: req.body.email}).select('username email image');
+    const user = await User.findOne({email: req.body.email}).select('username email image hash salt');
     if (!user || !user.validPassword(req.body.password)) {
-      return res.json({success: true, user: user, token: jwt.sign(JSON.stringify(user), config.JWT_KEY)});
-    } else {
       return res.json({success: false, message: 'Неверный логин и/или пароль.'});
+    } else {
+      return res.json({success: true, user: user, token: jwt.sign(JSON.stringify({
+        _id: user.id,
+        username: user.username,
+        email: user.email,
+      }), config.JWT_KEY)});
     }
   } catch (error) {
     console.log('/api/auth', error);
@@ -52,7 +56,7 @@ module.exports.register = async function(req, res) {
         await User.findByIdAndUpdate(createdUser.id, { $push: { servers: { $each: servers } } });
         if (servers) {
           for (const server of servers) {
-            io.toString(`Server-${server.id}`).emit('User_ConnectedToServer', {
+            io.to(`Server-${server.id}`).emit('User_UserJoinedToServer', {
               serverId: server.id,
               user: {
                 _id: createdUser.id,
@@ -91,7 +95,7 @@ module.exports.create_server = async function(req, res) {
           User.find().select('servers').exec()
         ]);
         try {
-          const createdServer = await Server({
+          const createdServer = await _Server({
             name: req.body.serverName,
             users: users,
             rooms: [createdRoom]
@@ -211,7 +215,7 @@ module.exports.remove_server = async function(req, res) {
 
 module.exports.remove_room = async function(req, res) {
   try {
-    const user = await User.findById(jwt.verify(req.body.token, myJWTSecretKey));
+    const user = await User.findById(jwt.verify(req.body.token, config.JWT_KEY));
     if (user.isAdmin) {
       try {
         const [room, server] = await Promise.all([
@@ -225,7 +229,7 @@ module.exports.remove_room = async function(req, res) {
             room.remove()
           ]);
           for (const reciver of server.users) {
-            io.to(`User-${user.id}`).emit('Server_RoomRemoved', {serverId: server.id, roomId: room.id});
+            io.to(`User-${reciver.id}`).emit('Server_RoomRemoved', {serverId: server.id, roomId: room.id});
           }
           return res.json({success: true});
         } catch (error) {
@@ -254,10 +258,18 @@ module.exports.edit_server = async function(req, res) {
     const user = await User.findById(jwt.verify(req.body.token, config.JWT_KEY));
     if (user.isAdmin) {
       try {
+        if (req.body.serverName)
+          await _Server.findByIdAndUpdate(req.body.serverId, {name: req.body.serverName});
+        if (req.file)
+          await _Server.findByIdAndUpdate(req.body.serverId, {image: req.file.path.substring(13)});
         const [room, server] = await Promise.all([
           Room.findById(req.body.roomId).populate({path: 'messages', select: '_id', model: 'roomMessage'}).exec(),
           _Server.findById(req.body.serverId).populate({path: 'users', select: 'id', model: 'user'}).exec()
         ]);
+        const server = await _Server.findById(req.body.serverId).populate('users', 'id');
+        for (const reciver of server.users) {
+          io.to(`User-${reciver.id}`).emit('ServerChanged', {serverId: server.id, server: { name: server.name, image: server.image }});
+        }
         try {
           await Promise.all([
             RoomMessage.remove({ _id: { $in: room.messages.map(msg => msg.id) } }),
@@ -306,7 +318,7 @@ module.exports.edit_user = async function(req, res) {
       if (req.body.password !== "" && typeof req.body.password !== 'undefined')
         user.password = req.body.password;
       if (req.file)
-        user.image = req.file.path.substring(13);
+        user.image = req.file.path.substring(14);
       try {
         const updatedUser = await user.save();
 

@@ -8,7 +8,7 @@ import UserList from '../Components/UserList';
 import DialogBoxSelectUser from '../Components/DialogBoxSelectUser';
 import FSDialogBoxEditServer from '../Components/FSDialogBoxEditServer';
 import DialogBoxCreateRoom from '../Components/DialogBoxCreateRoom';
-import { serversContainer, homeConstants, ServerAddress, SocketEmit } from '../Constants';
+import { serversContainer, homeConstants, ServerAddress, SocketEmit, NotificationContainer } from '../Constants';
 
 import {
   Card,
@@ -70,15 +70,19 @@ class ServerWrapper extends React.Component {
   }
   SaveNewServerSettings(serverName="", image="") {
     this.СloseDialogServerSettings();
-    const { activeServerId } = this.props;
-    let formData = new FormData();
-    formData.append('token', localStorage.getItem('token'));
-    formData.append('serverId', activeServerId);
-    if (serverName !== "") formData.append('serverName', serverName);
-    if (image!=="" && image!==undefined) formData.append('picture', image);
+    const { activeServerId, setNotification } = this.props;
+    let formData = {
+      token: localStorage.getItem('token'),
+      serverId: activeServerId,
+    };
+    if (serverName !== "") formData.serverName(serverName);
+    if (image!=="" && image!==undefined) formData.picture(image);
     fetch(`${ServerAddress}/api/server/edit_server`, {
       method: 'post',
-      body: formData
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(formData)
     }).then(function(response) {
       response.json()
         .then(result => {
@@ -94,18 +98,16 @@ class ServerWrapper extends React.Component {
     });
   }
   RemoveRoomFromServer(roomId) {
-    const { servers, activeServerId, setActiveRoomId } = this.props;
+    const { servers, activeServerId, setActiveRoomId, setNotification } = this.props;
     const server = servers.find(server => { return server._id === activeServerId });
     if (server.activeRoomId === roomId){
       setActiveRoomId(server.rooms[0]._id);}
-    let formData = new FormData({ 
-      token: localStorage.getItem('token'),
-      serverId: activeServerId,
-      roomId: roomId 
-    });
     fetch(`${ServerAddress}/api/server/remove_room`, {
       method: 'post',
-      body: formData
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token: localStorage.getItem('token'), serverId: activeServerId, roomId: roomId })
     }).then(function(response) {
       response.json()
         .then(result => {
@@ -122,17 +124,15 @@ class ServerWrapper extends React.Component {
   }
   RemoveServer(serverId) {
     const { push } = this.props.history;
-    const { setActiveServer } = this.props;
+    const { setActiveServer, setNotification } = this.props;
     setActiveServer('');
-    push('/');
-    let formData = new FormData({
-      token: localStorage.getItem('token'),
-      serverId: serverId
-    });
-    
+    push('/');    
     fetch(`${ServerAddress}/api/server/remove_server`, {
       method: 'post',
-      body: formData
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token: localStorage.getItem('token'), serverId: serverId })
     }).then(function(response) {
       response.json()
         .then(result => {
@@ -159,15 +159,13 @@ class ServerWrapper extends React.Component {
   }
   СreateNewRoom(roomName) {
     this.СloseDialogCreateRoom();
-    const { activeServerId } = this.props;
-    let formData = new FormData({
-      token: localStorage.getItem('token'),
-      serverId: activeServerId,
-      newRoomName: roomName
-    });
+    const { activeServerId, setNotification } = this.props;
     fetch(`${ServerAddress}/api/server/create_room`, {
       method: 'post',
-      body: formData
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token: localStorage.getItem('token'), serverId: activeServerId, newRoomName: roomName })
     }).then(function(response) {
       response.json()
         .then(result => {
@@ -190,11 +188,13 @@ class ServerWrapper extends React.Component {
     else push('/');
   }
   SendMessage() {
-    const { servers, activeServerId, user } = this.props;
+    const { servers, activeServerId, user, socket } = this.props;
     const server = servers.find(server => { return server._id === activeServerId });
     const room = server.rooms.find(room => { return room._id === server.activeRoomId });
-    this.props.socket.emit(SocketEmit.ServerMessage, { server: activeServerId, room: room._id, message: {value: room.typing, author: { _id: user._id, username: user.username }} });
-    this.props.setTypingValue('');
+    if (room.typing.length > 0) {
+      socket.emit(SocketEmit.ServerMessage, { serverId: activeServerId, roomId: room._id, message: {value: room.typing, author: { _id: user._id, username: user.username }} });
+      this.props.setTypingValue('');
+    }
   }
   SelectUserForDialogBox(id) {
     const { friends, blocked, user, servers, activeServerId, requests } = this.props;
@@ -268,15 +268,13 @@ class ServerWrapper extends React.Component {
   }
   banUserFromServer(userId) {
     this.closeDialogBox();
-    const {activeServerId} = this.props;
-    let formData = new FormData({ 
-      token: localStorage.getItem('token'),
-      userId: userId,
-      serverId: activeServerId 
-    });
+    const {activeServerId, setNotification} = this.props;
     fetch(`${ServerAddress}/api/server/ban_user`, {
       method: 'post',
-      body: formData
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token: localStorage.getItem('token'), userId: userId, serverId: activeServerId })
     }).then(function(response) {
       response.json()
         .then(result => {
@@ -296,15 +294,13 @@ class ServerWrapper extends React.Component {
     window.location.reload();
   }
   unbanUserFromServer(userId) {
-    const {activeServerId} = this.props;
-    let formData = new FormData({ 
-      token: localStorage.getItem('token'),
-      userId: userId,
-      serverId: activeServerId 
-    });
+    const {activeServerId, setNotification} = this.props;
     fetch(`${ServerAddress}/api/server/unban_user`, {
       method: 'post',
-      body: formData
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token: localStorage.getItem('token'), userId: userId, serverId: activeServerId })
     }).then(function(response) {
       response.json()
         .then(result => {
@@ -321,13 +317,13 @@ class ServerWrapper extends React.Component {
     this.closeDialogBox();
   }
   handleCanselFriendRequest(newFriendId) {
-    let formData = new FormData({ 
-      token: localStorage.getItem('token'),
-      newFriendId: newFriendId
-    });
+    const {setNotification} = this.props;
     fetch(`${ServerAddress}/api/user/cansel_request`, {
       method: 'post',
-      body: formData
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token: localStorage.getItem('token'), newFriendId: newFriendId })
     }).then(function(response) {
       response.json()
         .then(result => {
@@ -346,13 +342,13 @@ class ServerWrapper extends React.Component {
     });
   }
   handleSendFriendRequest(newFriendId) {
-    let formData = new FormData({ 
-      token: localStorage.getItem('token'),
-      newFriendId: newFriendId
-    });
+    const { setNotification} = this.props;
     fetch(`${ServerAddress}/api/user/send_request`, {
       method: 'post',
-      body: formData
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token: localStorage.getItem('token'), newFriendId: newFriendId })
     }).then(function(response) {
       response.json()
         .then(result => {
@@ -371,13 +367,13 @@ class ServerWrapper extends React.Component {
     });
   }
   handleUnblockUser(blockedId) {
-    let formData = new FormData({ 
-      token: localStorage.getItem('token'),
-      blockedUserId: blockedId
-    });
+    const {setNotification} = this.props;
     fetch(`${ServerAddress}/api/user/unblock_user`, {
       method: 'post',
-      body: formData
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token: localStorage.getItem('token'), blockedUserId: blockedId })
     }).then(function(response) {
       response.json()
         .then(result => {
@@ -396,13 +392,13 @@ class ServerWrapper extends React.Component {
     });
   }
   handleRemoveFriend(oldFriendId) {
-    let formData = new FormData({ 
-      token: localStorage.getItem('token'),
-      oldFriendId: oldFriendId
-    });
+    const {setNotification} = this.props;
     fetch(`${ServerAddress}/api/user/remove_friend`, {
       method: 'post',
-      body: formData
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token: localStorage.getItem('token'), oldFriendId: oldFriendId })
     }).then(function(response) {
       response.json()
         .then(result => {
@@ -421,13 +417,13 @@ class ServerWrapper extends React.Component {
     });
   }
   handleBlockUser(blockingUserId) {
-    let formData = new FormData({ 
-      token: localStorage.getItem('token'),
-      blockingUserId: blockingUserId
-    });
+    const {setNotification} = this.props;
     fetch(`${ServerAddress}/api/user/block_user`, {
       method: 'post',
-      body: formData
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token: localStorage.getItem('token'), blockingUserId: blockingUserId })
     }).then(function(response) {
       response.json()
         .then(result => {
@@ -471,23 +467,23 @@ class ServerWrapper extends React.Component {
                 </Card>
                 <div style={{display: 'flex', paddingLeft:3}}>
                   <div style={{width:'80%'}}>
-                    <ServerChat messages={room.messages} selectUser={this.SelectUserForDialogBox} />
+                    <Chat messages={room.messages} selectUser={this.SelectUserForDialogBox} />
                     <MessageInput 
                       setTypingValue={this.props.setTypingValue}
                       sendMessage={this.SendMessage}
                       typing={room.typing}
                     />
                   </div>
-                  <ServerUserList users={server.users} selectUser={this.SelectUserForDialogBox} />
+                  <UserList users={server.users} selectUser={this.SelectUserForDialogBox} />
                 </div>
               </div>
-              <ResponsiveDialogBox open={this.state.open} selectedUser={this.state.selectedUser} handleClose={this.closeDialogBox} buttons={this.state.buttons} />
+              <DialogBoxSelectUser open={this.state.open} selectedUser={this.state.selectedUser} handleClose={this.closeDialogBox} buttons={this.state.buttons} />
             
             {
               user.isAdmin
               ? <div>
                   <FSDialogBoxEditServer servImage={server.image} unbanUser={this.unbanUserFromServer} serverId={server._id} removeServer={this.RemoveServer} removeRoom={this.RemoveRoomFromServer} rooms={server.rooms} serverName={server.name} blocked={server.blocked} closeDialog={this.CloseDialogServerSettings} saveChanges={this.SaveNewServerSettings} open={this.state.openServerSettings}/>
-                  <DialogBoxCreateRoom createNewRoom={this.createNewRoom} open={this.state.openNewRoom} closeDialog={this.closeDialogCreateRoom}/>
+                  <DialogBoxCreateRoom createNewRoom={this.СreateNewRoom} open={this.state.openNewRoom} closeDialog={this.closeDialogCreateRoom}/>
                 </div>
               : <div></div>
             }

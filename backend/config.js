@@ -1,11 +1,11 @@
 module.exports = {
   cors: {
-    whitelist: ['http://localhost:8080'],
+    whitelist: ['http://localhost:3000'],
   },
   database: {
     address: 'mongodb://localhost:27017/sockets_rockets'
   },
-  JWT_KEY: 'fighting_gold',
+  JWT_KEY: 'supersecret',
   port: 8000,
 
   firstLaunch: {
