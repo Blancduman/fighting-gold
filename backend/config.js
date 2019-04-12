@@ -8,7 +8,7 @@ module.exports = {
   JWT_KEY: 'supersecret',
   port: 8000,
 
-  firstLaunch: {
+  newAdmin: {
     username: 'Admin',
     email: 'Admin@gmail.com',
     password: '12345'
