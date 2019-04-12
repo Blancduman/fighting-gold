@@ -419,6 +419,7 @@ module.exports.cansel_request = async function(req, res) {
         
         io.to(`User-${updatedUser.id}`).emit('User_RequestCanseled', { userId: updatedNewFriend.id });
         io.to(`User-${updatedNewFriend.id}`).emit('User_RequestCanseled', { userId: updatedUser.id });
+        return res.json({succes: true});
       } catch (error) {
         console.log('/api/cansel_request 2 try', error);
       }
@@ -471,6 +472,7 @@ module.exports.accept_request = async function(req, res) {
           ]);
           io.to(`User-${updatedUser.id}`).emit('User_RequestAccepted', { user: { _id: newFriend.id, username: newFriend.username, status: newFriend.status, image: newFriend.image }, dialog: createdDialog });
           io.to(`User-${updatedNewFriend.id}`).emit('User_RequestAccepted', { user: { _id: updatedUser.id, username: updatedUser.username, status: updatedUser.status, image: updatedUser.image }, dialog: createdDialog });
+          return res.json({succes: true});
         } catch (error) {
           console.log('/api/user/accept_request', error);
           return res.json({success: false, message: errorMessages.DialogSaveError});
@@ -508,7 +510,8 @@ module.exports.send_request = async function(req, res) {
         ]);
         
         io.to(`User-${updatedUser.id}`).emit('User_SendRequest', { to: { _id: updatedNewFriend.id, username: updatedNewFriend.username, status: updatedNewFriend.status, image: updatedNewFriend.image }, from: { _id: updatedUser.id, username: updatedUser.username, status: updatedUser.status, image: updatedUser.image } });
-        io.to(`User-${updatedNewFriend.id}`).emit('User_SendRequest', { to: { _id: updatedNewFriend.id, username: updatedNewFriend.username, status: updatedNewFriend.status, image: updatedNewFriend.image }, from: { _id: updatedUser.id, username: updatedUser.username, status: updatedUser.status, status: updatedUser.image } });
+        io.to(`User-${updatedNewFriend.id}`).emit('User_SendRequest', { to: { _id: updatedNewFriend.id, username: updatedNewFriend.username, status: updatedNewFriend.status, image: updatedNewFriend.image }, from: { _id: updatedUser.id, username: updatedUser.username, status: updatedUser.status, image: updatedUser.image } });
+        return res.json({succes: true});
       } catch (error) {
         console.log('/api/user/send_request 2 try', error);
         return res.json({success: false, message: 'Ошибка на сервере.'});
@@ -623,6 +626,7 @@ module.exports.block_user = async function(req, res) {
             ]);
             io.to(`User-${updatedBlockingUser.id}`).emit('User_FriendRemoved', { friendId: updatedUser.id });
             io.to(`User-${updatedUser.id}`).emit('User_BlockUser', { blocked: { _id: updatedBlockingUser.id, username: updatedBlockingUser.username, status: updatedBlockingUser.status, image: updatedBlockingUser.image }});
+            return res.json({success: true});
           }
         } catch (error) {
           console.log('/api/user/block_user 3 try', error);

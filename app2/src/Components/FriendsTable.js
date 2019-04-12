@@ -87,6 +87,7 @@ function FriendsTable({unblockUser, canselFriendRequest, acceptFriend, userId, f
     case 'Pending': {
       if (requests)
         ListUsers = requests.map(request => {
+          console.log(request);
           if (request.from._id === userId) {
             return (
               <TableRow key={request.to._id} className={classesName(classes.tableRow, classes.tableRowHover)}
