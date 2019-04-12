@@ -48,8 +48,6 @@ Fighting-Gold
       └───constants
 ```
 
-
-
 # Запуск
 1. Запустить MongoDB:
 
@@ -67,6 +65,13 @@ node index
 ```
 cd app
 npm run start
+```
+
+# Создать-администратора
+В **config.js** файле указывается логин, пароль и почта нового администратора.
+```
+cd fighting-gold/backend
+node addAdmin
 ```
 [//]: # (foot-start)
 
