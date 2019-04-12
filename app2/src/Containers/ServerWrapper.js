@@ -46,6 +46,7 @@ class ServerWrapper extends React.Component {
     this.handleRemoveFriend = this.handleRemoveFriend.bind(this);
     this.handleBlockUser = this.handleBlockUser.bind(this);
     this.closeDialogBox = this.closeDialogBox.bind(this);
+    this.handleAcceptFriend = this.handleAcceptFriend.bind(this);
   }
 
   MoveToDialog(friendId) {
@@ -196,6 +197,29 @@ class ServerWrapper extends React.Component {
       this.props.setTypingValue('');
     }
   }
+  handleAcceptFriend(newFriendId) {
+    const { setNotification } = this.props;
+    fetch(`${ServerAddress}/api/user/accept_request`, {
+      method: 'post',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token: localStorage.getItem('token'), newFriendId: newFriendId})
+    }).then(function(response) {
+      response.json()
+        .then(result => {
+          if (result.success) {
+            setNotification('success', 'Пользователь добавлен в список друзей.');
+          } else {
+            setNotification('error', result.message);
+            if (result.logout) {
+              this.Logout();
+            }
+          }
+        })
+    });
+    this.closeDialogBox();
+  }
   SelectUserForDialogBox(id) {
     const { friends, blocked, user, servers, activeServerId, requests } = this.props;
     var _selectedUser = servers.find(server => { return server._id === activeServerId }).users.find(usr => { return usr._id === id});
@@ -206,16 +230,16 @@ class ServerWrapper extends React.Component {
           <div>
             {user.isAdmin ?
             <Button onClick={() => this.banUserFromServer(_selectedUser._id)} color="primary">
-              Ban
+            Бан
             </Button> : <div></div>}
             <Button onClick={() => this.handleBlockUser(_selectedUser._id)} color="primary">
-              Block
+            Заблокировать
             </Button>
             <Button onClick={() => this.handleRemoveFriend(_selectedUser._id)} color="primary">
-              Remove from friends
+              Удалить из друзей
             </Button>
             <Button onClick={() => this.moveToDialog(_selectedUser._id)} color="primary">
-              Send message
+              Отправить сообщение
             </Button>
           </div>
         )
@@ -223,23 +247,40 @@ class ServerWrapper extends React.Component {
         buttons = (
           <div>
             <Button onClick={() => this.handleUnblockUser(_selectedUser._id)} color="primary">
-              Unblock
+              Разблокировать
             </Button>
           </div>
         )
-      } else if ((requests.findIndex(request => { return request.from._id === _selectedUser._id}) !== -1)
-                  || (requests.findIndex(request => { return request.to._id === _selectedUser._id}) !== -1)) {
+      } else if (requests.findIndex(request => { return request.to._id === _selectedUser._id}) !== -1) {
         buttons = (
           <div>
             {user.isAdmin ?
             <Button onClick={() => this.banUserFromServer(_selectedUser._id)} color="primary">
-              Ban
+            Бан
             </Button> : <div></div>}
-            <Button onClick={this.handleBlockUser(_selectedUser._id)} color="primary">
-              Block
+            <Button onClick={() => this.handleBlockUser(_selectedUser._id)} color="primary">
+            Заблокировать
             </Button>
             <Button onClick={() => this.handleCanselFriendRequest(_selectedUser._id)} color="primary">
-              Cansel friend request
+              Отменить
+            </Button>
+          </div>
+        )
+      } else if (requests.findIndex(request => { return request.from._id === _selectedUser._id}) !== -1){
+        buttons = (
+          <div>
+            {user.isAdmin ?
+            <Button onClick={() => this.banUserFromServer(_selectedUser._id)} color="primary">
+              Бан
+            </Button> : <div></div>}
+            <Button onClick={() => this.handleBlockUser(_selectedUser._id)} color="primary">
+              Заблокировать
+            </Button>
+            <Button onClick={() => this.handleCanselFriendRequest(_selectedUser._id)} color="primary">
+              Отказать
+            </Button>
+            <Button onClick={() => this.handleAcceptFriend(_selectedUser._id)} color="primary">
+              Добавить
             </Button>
           </div>
         )
@@ -288,6 +329,7 @@ class ServerWrapper extends React.Component {
           }
         });
     });
+    this.closeDialogBox();
   }
   Logout() {
     localStorage.removeItem('token');
@@ -337,9 +379,7 @@ class ServerWrapper extends React.Component {
           }
         });
     });
-    this.setState({
-      open: false
-    });
+    this.closeDialogBox();
   }
   handleSendFriendRequest(newFriendId) {
     const { setNotification} = this.props;
@@ -362,9 +402,7 @@ class ServerWrapper extends React.Component {
           }
         });
     });
-    this.setState({
-      open: false
-    });
+    this.closeDialogBox();
   }
   handleUnblockUser(blockedId) {
     const {setNotification} = this.props;
@@ -387,9 +425,7 @@ class ServerWrapper extends React.Component {
           }
         });
     });
-    this.setState({
-      open: false
-    });
+    this.closeDialogBox();
   }
   handleRemoveFriend(oldFriendId) {
     const {setNotification} = this.props;
@@ -412,9 +448,7 @@ class ServerWrapper extends React.Component {
           }
         });
     });
-    this.setState({
-      open: false
-    });
+    this.closeDialogBox();
   }
   handleBlockUser(blockingUserId) {
     const {setNotification} = this.props;
@@ -437,14 +471,18 @@ class ServerWrapper extends React.Component {
           }
         });
     });
-    this.setState({
-      open: false
-    });
+    this.closeDialogBox();
   }
   closeDialogBox() {
     this.setState({
       open: false
     });
+    this.setState({
+      selectedUser: null
+    });
+    this.setState({
+      buttons: null
+    })
   }
 
   render() {

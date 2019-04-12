@@ -15,8 +15,8 @@ import { ServerAddress } from '../Constants'
 class DialogBoxSelectUser extends React.Component {
   render() {
     const { selectedUser, buttons } = this.props;
-    
-    return (
+    if (selectedUser)
+      return (
       <Dialog
         maxWidth="sm"
         open={this.props.open}
@@ -43,6 +43,7 @@ class DialogBoxSelectUser extends React.Component {
         </DialogActions>
       </Dialog>
     );
+    else return <div></div>
   }
 }
 

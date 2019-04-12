@@ -31,7 +31,7 @@ module.exports = async function(socket) {
     const _user = await User.findById(socket.decoded_token._id);
     if(_user.isAdmin) {
       const user = await User.findByIdAndUpdate(socket.decoded_token._id, {status: 'Online'})
-      .select('username image email isAdmin')
+      .select('username image email isAdmin friends blocked requests dialogs servers')
       .populate([
                   { path: 'friends', select: 'status username image', model: 'user' },
                   { path: 'blocked', select: 'status username image', model: 'user'},
@@ -81,7 +81,7 @@ module.exports = async function(socket) {
       }
       if (user.requests) {
         for (const request of user.requests) {
-          io.to(`User-${request.to.id === user.id ? request.from.id : requst.to.id}`).emit(Events.RequestOnline, { user: { _id: user.id } })
+          io.to(`User-${request.to.id === user.id ? request.from.id : request.to.id}`).emit(Events.RequestOnline, { user: { _id: user.id } })
         }
       }
       const theyBlockedHim = await User.find({blocked: user.id});
@@ -93,7 +93,7 @@ module.exports = async function(socket) {
       socket.emit(Events.LoadApp, user);
     } else if (await User.findById(socket.decoded_token._id)) {
       const user = await User.findByIdAndUpdate(socket.decoded_token._id, {status: 'Online'})
-      .select('username image email')
+      .select('username image email friends blocked requests dialogs servers')
       .populate([
                   { path: 'friends', select: 'status username image', model: 'user' },
                   { path: 'blocked', select: 'status username image', model: 'user'},
@@ -141,7 +141,7 @@ module.exports = async function(socket) {
         }
         if (user.requests) {
           for (const request of user.requests) {
-            io.to(`User-${request.to.id === user.id ? request.from.id : requst.to.id}`).emit(Events.RequestConnected, { user: { _id: user.id } })
+            io.to(`User-${request.to.id === user.id ? request.from.id : request.to.id}`).emit(Events.RequestConnected, { user: { _id: user.id } })
           }
         }
         const theyBlockedHim = await User.find({blocked: user.id});
@@ -198,7 +198,7 @@ module.exports = async function(socket) {
       }
       if (user.requests) {
         for (const request of user.requests) {
-          io.to(`User-${request.to.id === user.id? request.from.id: requst.to.id}`).emit(Events.RequestOffline, { user: { _id: user.id } });
+          io.to(`User-${request.to.id === user.id? request.from.id: request.to.id}`).emit(Events.RequestOffline, { user: { _id: user.id } });
         }
       }
       const theyBlockedHim = await User.find({blocked: user.id});
@@ -210,7 +210,6 @@ module.exports = async function(socket) {
       socket.leave(`User-${user.id}`);
     } catch (error) {
       console.log('socket disconnect', error);
-      socket.emit(Events.Logout);
     }
   });
 

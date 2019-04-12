@@ -529,8 +529,8 @@ module.exports.send_request = async function(req, res) {
 module.exports.remove_friend = async function(req, res) {
   try {
     const [user, oldFriend] = await Promise.all([
-      User.findById(jwt.verify(req.body.token, config.JWT_KEY)),
-      User.findById(req.body.oldFriendId)
+      User.findById(jwt.verify(req.body.token, config.JWT_KEY)).populate({path: 'dialogs', select: 'id', model: 'dialog'}).exec(),
+      User.findById(req.body.oldFriendId).populate({path: 'dialogs', select: 'id', model: 'dialog'}).exec()
     ]);
     try {
       if (user && oldFriend) {
@@ -577,11 +577,13 @@ module.exports.remove_friend = async function(req, res) {
 module.exports.block_user = async function(req, res) {
   try {
     const [user, blockingUser] = await Promise.all([
-      User.findById(jwt.verify(req.body.token, config.JWT_KEY)).populate([
+      User.findById(jwt.verify(req.body.token, config.JWT_KEY)._id).populate([
+        {path: 'dialogs', select: 'id', model: 'dialog'},
         {path: 'requests.to', select: 'id', model: 'user'},
         {path: 'requests.from', select: 'id', model: 'user'},
-      ]).exec(),,
+      ]).exec(),
       User.findById(req.body.blockingUserId).populate([
+        {path: 'dialogs.users', select: 'id', model: 'user'},
         {path: 'requests.to', select: 'id', model: 'user'},
         {path: 'requests.from', select: 'id', model: 'user'},
       ]).exec(),
@@ -612,15 +614,15 @@ module.exports.block_user = async function(req, res) {
               user.save(),
               blockingUser.save()
             ]);
-            io.to(`User-${updatedUser.id}`).emit('User_BlockUser', { blocked: { _id: updatedBlockingUser.id, username: updatedBlockingUser.username, status: updatedBlockingUser.status, image: updatedBlockingUser.image }, dialogId: removedDialog.id });
             io.to(`User-${updatedBlockingUser.id}`).emit('User_FriendRemoved', { friendId: updatedUser.id, dialogId: removedDialog.id });
+            io.to(`User-${updatedUser.id}`).emit('User_BlockUser', { blocked: { _id: updatedBlockingUser.id, username: updatedBlockingUser.username, status: updatedBlockingUser.status, image: updatedBlockingUser.image }, dialogId: removedDialog.id });
           } else {
             const [updatedUser, updatedBlockingUser] = await Promise.all([
               user.save(),
               blockingUser.save()
             ]);
-            io.to(`User-${updatedUser.id}`).emit('User_BlockUser', { blocked: { _id: updatedBlockingUser.id, username: updatedBlockingUser.username, status: updatedBlockingUser.status, image: updatedBlockingUser.image }});
             io.to(`User-${updatedBlockingUser.id}`).emit('User_FriendRemoved', { friendId: updatedUser.id });
+            io.to(`User-${updatedUser.id}`).emit('User_BlockUser', { blocked: { _id: updatedBlockingUser.id, username: updatedBlockingUser.username, status: updatedBlockingUser.status, image: updatedBlockingUser.image }});
           }
         } catch (error) {
           console.log('/api/user/block_user 3 try', error);
@@ -656,7 +658,7 @@ module.exports.unblock_user = async function(req, res) {
         if (blockingUser) {
           try {
             await User.findByIdAndUpdate(user.id, {$pull: {blocked: blockingUser.id}});
-            io.to(`User-${updatedUser.id}`).emit('User_UnblockUser', {unblockedId: blockingUser.id});
+            io.to(`User-${user.id}`).emit('User_UnblockUser', {unblockedId: blockingUser.id});
             return res.json({success: true});
           } catch (error) {
             console.log('/api/user/unblock_user 2 try', error);
@@ -699,9 +701,9 @@ module.exports.ban_user = async function(req, res) {
         if (banningUser && fromServer) {
           try {
             const [server, bannedUser, messages] = await Promise.all([
-              _Server.findByIdAndUpdate(data.serverId, {$pull: {users: data.userId}, $push: {blocked: data.userId}}).populate('users', 'id isAdmin').exec(),
-              User.findByIdAndUpdate(data.userId, {$pull: {servers: data.serverId}}),
-              RoomMessage.deleteMany({author: data.userId}).map(msg => msg.id)
+              _Server.findByIdAndUpdate(fromServer.id, {$pull: {users: banningUser.id}, $push: {blocked: banningUser.id}}).populate('users', 'id isAdmin').exec(),
+              User.findByIdAndUpdate(banningUser.id, {$pull: {servers: fromServer.id}}),
+              RoomMessage.deleteMany({author: banningUser.id}).map(msg => msg.id)
             ]);
             if (messages) {
               for (const room of server.rooms) {
@@ -771,11 +773,11 @@ module.exports.unban_user = async function(req, res) {
             ]);
             for (const reciver of server.users) {
               if (reciver.isAdmin) {
-                io.to(`User-${reciver.id}`).emit('Admin_UserUnbanned', JSON.stringify({serverId: server.id,  user: {_id: UnbannedUser.id, username: UnbannedUser.username, status: UnbannedUser.status, image: UnbannedUser.image}}));
+                io.to(`User-${reciver.id}`).emit('Admin_UserUnbanned', {serverId: server.id,  user: {_id: unbannedUser.id, username: unbannedUser.username, status: unbannedUser.status, image: unbannedUser.image}});
               } else if (reciver.id === unbannedUser.id) {
-                io.to(`User-${reciver.id}`).emit('Server_ServerCreated', JSON.stringify({server: server}));
+                io.to(`User-${reciver.id}`).emit('Server_ServerCreated', {server: server});
               } else {
-                io.to(`User-${reciver.id}`).emit('User_ConnectToServer', {serverId: server.id, user: {_id: UnbannedUser.id, username: UnbannedUser.username, status: UnbannedUser.status, image: UnbannedUser.image}});
+                io.to(`User-${reciver.id}`).emit('User_ConnectToServer', {serverId: server.id, user: {_id: unbannedUser.id, username: unbannedUser.username, status: unbannedUser.status, image: unbannedUser.image}});
               }
             }
             return res.json({success: true});
