@@ -9,7 +9,7 @@ import {
   withMobileDialog,
   Avatar
 } from '@material-ui/core';
-import { Delete, Clear } from '@material-ui/icons';
+import { Clear } from '@material-ui/icons';
 import { ServerAddress } from '../Constants'
 
 class DialogBoxSelectUser extends React.Component {

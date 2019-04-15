@@ -10,7 +10,6 @@ import RegisterForm from '../Components/RegisterForm';
 import fetch from 'node-fetch';
 import { Link } from 'react-router-dom';
 import { ServerAddress } from '../Constants';
-import { withRouter } from 'react-router';
 import { NotificationContainer } from '../Constants';
 
 const styles = theme => ({
