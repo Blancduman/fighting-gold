@@ -1,6 +1,6 @@
 import React from 'react';
 import classNames from 'classnames';
-import { connect } from 'react';
+import { connect } from 'react-redux';
 import {
   colors,
   IconButton,
@@ -83,11 +83,11 @@ const MySnackbarContentWrapper = withStyles(styles1)(MySnackbarContent);
 
 class CustomizedSnackbars extends React.Component {
   state = {
-    open: false,
-  };
-
+    open: false
+  }
   shouldComponentUpdate(nextProps, nextState) {
-    return !this.state.open && nextState.open;
+    //setInterval()
+    return true;
   }
 
   handleClick() {
@@ -131,5 +131,6 @@ const mapStateToProps = state => {
     message: state.NotificationSide.message
   }
 };
+console.log(mapStateToProps, CustomizedSnackbars)
 
 export default connect(mapStateToProps)(CustomizedSnackbars);

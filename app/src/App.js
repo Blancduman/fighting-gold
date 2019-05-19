@@ -111,14 +111,14 @@ class App extends React.Component {
   }
   render() {
     return (
-        <BrowserRouter>
-          <Switch>
-            <PrivateRoute exact path="/" component={Home} />
-            <AuthRoute path="/login" component={Login} />
-            <AuthRoute path="/register" component={Register}/>
-            <PrivateRoute path="/server/:server_id" component={ServerWrapper} />
-          </Switch>
-        </BrowserRouter>
+      <BrowserRouter>
+        <Switch>
+          <PrivateRoute exact path="/" component={Home} />
+          <AuthRoute path="/login" component={Login} />
+          <AuthRoute path="/register" component={Register}/>
+          <PrivateRoute path="/server/:server_id" component={ServerWrapper} />
+        </Switch>
+      </BrowserRouter>
     )
   }
 }

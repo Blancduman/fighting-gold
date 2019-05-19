@@ -6,6 +6,7 @@ import DialogList from '../Components/DialogList';
 import FriendsTable from '../Components/FriendsTable';
 import DialogBoxSelectUser from '../Components/DialogBoxSelectUser';
 import FSDialogBoxEditProfile from '../Components/FSDialogBoxEditProfile';
+import Notification from './Notification';
 import { connect } from 'react-redux';
 import { homeConstants, UserConstants, ServerAddress, SocketEmit, NotificationContainer } from '../Constants';
 import {
@@ -270,6 +271,7 @@ class Home extends React.Component {
             ? ChatWindow
             : FriendsWindow }
           <FSDialogBoxEditProfile saveChanges={this.SaveUserProfileChanges} open={this.state.openProfileEditor} user={user} logout={this.Logout} closeDialog={this.CloseUserProfile}/>
+          <Notification />
         </div>
     )
   }
@@ -303,5 +305,4 @@ const mapDispatchToProps = dispatch => {
     setUserUpdates: (username, email, image) => dispatch({ type: UserConstants.USER_CHANGED, username: username, email: email, image: image})
   }
 }
-
 export default connect(mapStateToProps, mapDispatchToProps)(Home);
