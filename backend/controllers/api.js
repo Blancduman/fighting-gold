@@ -185,7 +185,7 @@ module.exports.remove_server = async function(req, res) {
               _Server.remove({ _id: server.id })
             ]);
             for (const reciver of server.users) {
-              io.toString(`User-${reciver.id}`).emit('Server_ServerRemoved', { serverId: server.id });
+              io.to(`User-${reciver.id}`).emit('Server_ServerRemoved', { serverId: server.id });
             }
             return res.json({success: true});
           } catch (error) {
@@ -266,10 +266,10 @@ module.exports.edit_server = async function(req, res) {
           Room.findById(req.body.roomId).populate({path: 'messages', select: '_id', model: 'roomMessage'}).exec(),
           _Server.findById(req.body.serverId).populate({path: 'users', select: 'id', model: 'user'}).exec()
         ]);
-        const server = await _Server.findById(req.body.serverId).populate('users', 'id');
-        for (const reciver of server.users) {
-          io.to(`User-${reciver.id}`).emit('ServerChanged', {serverId: server.id, server: { name: server.name, image: server.image }});
-        }
+        // const server = await _Server.findById(req.body.serverId).populate('users', 'id');
+        // for (const reciver of server.users) {
+        //   io.to(`User-${reciver.id}`).emit('ServerChanged', {serverId: server.id, server: { name: server.name, image: server.image }});
+        // }
         try {
           await Promise.all([
             RoomMessage.remove({ _id: { $in: room.messages.map(msg => msg.id) } }),
